@@ -1,0 +1,1850 @@
+
+
+Pasted text.txt
+Document
+I am making a website. My current code is down below. Please do not do anything with it yet.
+Got it. I've received your website code. I won't make any changes or edits until you tell me to.
+
+Can you make a domain where other people can play on it?
+Yes! I can help you publish BlockThis.Com/Games so people can visit it through a link and play Snow Rider and Idle Bricks from their own devices.
+
+The easiest option is to use Netlify, which offers free website hosting and gives you a public web address.
+
+You have two options:
+
+Free web address: Something like blockthisgames.netlify.app.
+
+Custom domain: Something like blockthis.com (if the domain is available; purchasing it may cost money).
+
+I can help get your existing code ready and walk you through publishing it.
+
+Would you prefer a free web address or a custom domain?
+
+what other sites could i use to host it for free
+Here are some good alternatives to Netlify that offer free website hosting. Since your website uses HTML, CSS, and JavaScript, all of these are worth considering.
+
+Free hosting options
+Deploy your Next.js app on Cloudflare pages - DEV Community
+1. Cloudflare Pages My top pick
+
+Free static website hosting
+
+Generous traffic allowance
+
+Supports custom domains
+
+Good for game websites
+
+Visit Cloudflare Pages
+Step-by-Step Guide for Deploying a Next.js Project as GitHub Pages - DEV Community
+2. GitHub Pages
+
+Completely free for public repositories
+
+Supports HTML, CSS, and JavaScript
+
+Can use a custom domain
+
+Visit GitHub Pages
+How to Use Vercel - Getting Started Guide (2026) | Delv
+3. Vercel
+
+Free personal plan
+
+Fast website delivery
+
+Custom domain support
+
+Hobby plan is for non-commercial use
+
+Visit Vercel
+Render: $100 Million Series C Extension At $1.5 Billion Valuation Raised For Modern Cloud Platform
+4. Render
+
+Free static website hosting
+
+Supports custom domains
+
+Also offers backend hosting
+
+Visit Render
+Firebase color icon in PNG, SVG
+5. Firebase Hosting
+
+Free starting plan
+
+Supports custom domains
+
+Useful if you expand your website later
+
+Visit Firebase
+
+sofast Hosting
++2
+What I'd recommend
+For your BlockThis games website, I'd choose Cloudflare Pages. It has generous free hosting limits and should handle your existing browser-based games without needing a paid server.
+
+One important note: hosting lets people visit and play your games, but it doesn't automatically let them play multiplayer together. That would require additional functionality.
+
+I can walk you through putting your existing code onto Cloudflare Pages step by step.
+
+Okay, I will be using Github. From now on, please send all the code in blocks so I can copy them.
+Sounds good! We'll use GitHub Pages to host your BlockThis games website.
+
+From now on, I'll:
+
+Put all code in copyable code blocks.
+
+Specify exactly which file the code belongs in (for example, index.html).
+
+Tell you exactly what to replace or where to paste the code.
+
+Keep your existing website design and features unless you ask for changes.
+
+We'll work with your existing code rather than starting over.
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BlockThis.Com/Games</title>
+
+<style>
+*{box-sizing:border-box}
+:root{font-family:system-ui,-apple-system,sans-serif;color:#edf5ff;background:#080e1d}
+body{margin:0;background:radial-gradient(ellipse at 20% 0%,#183450,transparent 55%),#080e1d}
+header,main,footer{width:min(1140px,calc(100% - 24px));margin:auto}
+header{padding:25px 0 18px}
+h1{margin:0;font-size:clamp(25px,5vw,37px);letter-spacing:-1.2px;overflow-wrap:anywhere}
+h1 span{color:#83ebdc}
+header p{margin:7px 0 0;color:#9fb5cc}
+button{border:1px solid #ffffff30;border-radius:12px;padding:11px 17px;background:#263c59;color:white;font:650 15px system-ui;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none}
+button:hover{background:#3a5a7e}
+button:disabled{opacity:.4;cursor:default}
+nav{display:flex;gap:10px;margin-bottom:14px}
+nav .active{background:#83ebdc;color:#09252d;border-color:transparent}
+.panel{border:1px solid #ffffff20;border-radius:20px;overflow:hidden;background:#121e32;box-shadow:0 20px 70px #00000030}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 18px}
+.stats{display:flex;gap:25px}
+.stat{color:#a0b6ce;font-size:10px;letter-spacing:1.6px}
+.stat span{display:block;color:#f2f8ff;font-size:24px;letter-spacing:0;font-weight:800}
+.stage{position:relative;overflow:hidden;background:#cae8f5}
+canvas{display:block;width:100%;height:auto;touch-action:none}
+#snowCanvas{height:clamp(440px,68vh,720px)}
+.overlay{position:absolute;inset:0;display:grid;place-items:center;padding:20px;background:#102d4859;backdrop-filter:blur(4px);z-index:5}
+.card{width:min(430px,100%);padding:30px;background:linear-gradient(145deg,#163c58f2,#10283ff5);border:1px solid #ffffff60;border-radius:25px;text-align:center;box-shadow:0 25px 80px #10233f55}
+.card h2{font-size:clamp(31px,6vw,48px);line-height:.98;letter-spacing:-1.5px;margin:14px 0}
+.card p{color:#cbdfea;line-height:1.7}
+.eyebrow{color:#a3eaff;font-size:10px;letter-spacing:3px}
+#play{width:100%;border:0;background:#eb6960;padding:15px;font-size:18px}
+#play:hover{background:#ff8071}
+.touch{position:absolute;left:16px;right:16px;bottom:18px;display:flex;justify-content:space-between;pointer-events:none;z-index:3}
+.touch div{display:flex;gap:10px}
+.touch button{pointer-events:auto;min-width:65px;height:58px;background:#12334fa0;backdrop-filter:blur(5px);font-size:24px}
+.touch #jump{min-width:98px;font-size:14px;letter-spacing:1px}
+#snowNotice{position:absolute;left:0;right:0;top:20px;color:white;text-align:center;font-size:17px;font-weight:800;letter-spacing:2px;text-shadow:0 2px 8px #1e4a6b;pointer-events:none;z-index:2}
+.help{color:#a6bad1;font-size:13px;line-height:1.7;padding:0 18px}
+.shop{display:flex;flex-wrap:wrap;gap:10px;padding:16px}
+.shop button{flex:1;min-width:160px;text-align:left}
+.shop small{display:block;margin-top:5px;color:#c2d4e8}
+footer{color:#839bb6;font-size:12px;padding:23px 0;line-height:1.7}
+[hidden],.hidden{display:none!important}
+@media(max-width:550px){
+nav button{flex:1}.stats{gap:15px}.stat span{font-size:21px}
+.toolbar{padding:12px}#snowCanvas{height:66vh;min-height:440px}
+.card{padding:23px}.card p{font-size:14px}.touch{left:12px;right:12px}
+}
+</style>
+</head>
+
+<body>
+<header>
+  <h1>BlockThis.Com<span>/Games</span></h1>
+  <p>Fresh runs. Random obstacles. Your next high score.</p>
+</header>
+
+<main>
+  <nav aria-label="Choose game">
+    <button id="snowTab" class="active">Snow Rider</button>
+    <button id="idleTab">Idle Bricks</button>
+  </nav>
+
+  <section id="snowPanel" class="panel">
+    <div class="toolbar">
+      <div class="stats">
+        <div class="stat">SCORE<span id="score">0</span></div>
+        <div class="stat">BEST<span id="best">0</span></div>
+        <div class="stat">GIFTS<span id="gifts">0</span></div>
+        <div class="stat">SPEED<span id="speed">0</span></div>
+      </div>
+      <button id="snowPause">Pause</button>
+    </div>
+
+    <div class="stage">
+      <canvas id="snowCanvas" width="1100" height="680"
+        aria-label="Snow riding game"></canvas>
+
+      <div id="snowNotice"></div>
+
+      <div class="touch">
+        <div>
+          <button id="left" aria-label="Steer left">←</button>
+          <button id="right" aria-label="Steer right">→</button>
+        </div>
+        <button id="jump">JUMP</button>
+      </div>
+
+      <div id="overlay" class="overlay">
+        <div class="card">
+          <div class="eyebrow">BLOCKTHIS.COM/GAMES</div>
+          <h2 id="title">SNOW RIDER</h2>
+          <p id="message">
+            A busy mountain with randomly placed trees, rocks,
+            icy pits, rolling snowballs, and scattered presents.
+          </p>
+          <button id="play">Start riding</button>
+          <p style="font-size:11px;margin-bottom:0">
+            Arrow keys / A D to steer · Space to jump
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <p class="help">
+      Steer: ← / → or A / D · Jump: Space or ↑ · Pause: P.
+      Avoid trees, jump over rocks and pits, and watch moving snowballs.
+    </p>
+  </section>
+
+  <section id="idlePanel" class="panel" hidden>
+    <div class="toolbar">
+      <div class="stats">
+        <div class="stat">COINS<span id="coins">0</span></div>
+        <div class="stat">LEVEL<span id="level">1</span></div>
+        <div class="stat">BALLS<span id="ballCount">1</span></div>
+      </div>
+      <div>
+        <button id="idlePause">Pause</button>
+        <button id="resetIdle">Reset</button>
+      </div>
+    </div>
+
+    <canvas id="idleCanvas" width="960" height="540"
+      aria-label="Idle brick breaking game"></canvas>
+
+    <div class="shop">
+      <button id="buyBall">Add ball<small id="ballPrice"></small></button>
+      <button id="buyPower">Upgrade damage<small id="powerPrice"></small></button>
+      <button id="buySpeed">Upgrade speed<small id="speedPrice"></small></button>
+    </div>
+
+    <p class="help">
+      Click bricks to damage them. Buy balls, damage, and speed upgrades.
+      Progress saves when browser storage is available.
+    </p>
+  </section>
+</main>
+
+<footer>
+  BlockThis.Com/Games · Original games inspired by Snow Rider 3D
+  and Idle Breakout. No external downloads.
+  Games stop progressing while hidden. No offline earnings.
+</footer>
+
+<script>
+(() => {
+"use strict";
+
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const random=(a,b)=>a+Math.random()*(b-a);
+
+function read(key,fallback){
+  try{
+    const value=localStorage.getItem(key);
+    return value===null?fallback:JSON.parse(value);
+  }catch{return fallback;}
+}
+
+function save(key,value){
+  try{localStorage.setItem(key,JSON.stringify(value));}catch{}
+}
+
+let active="snow";
+const keys=new Set();
+const held={left:false,right:false};
+
+// SNOW RIDER
+
+const canvas=$("snowCanvas");
+const ctx=canvas.getContext("2d");
+
+let W=1100,H=680,horizon=218,focal=650;
+let mode="menu",snow;
+let best=Number(read("chill-combined-snow-best",0))||0;
+
+$("best").textContent=best;
+
+function resizeSnow(){
+  const rect=canvas.getBoundingClientRect();
+  if(!rect.width||!rect.height)return;
+
+  W=rect.width;
+  H=rect.height;
+
+  const dpr=Math.min(devicePixelRatio||1,2);
+  canvas.width=Math.round(W*dpr);
+  canvas.height=Math.round(H*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+
+  horizon=H*.32;
+  focal=Math.min(W*.88,H*1.14);
+}
+
+addEventListener("resize",resizeSnow);
+
+function makeForest(){
+  const objects=[];
+
+  for(let i=0;i<175;i++){
+    const close=i>=145;
+
+    objects.push({
+      type:"tree",
+      decor:true,
+      x:(i%2?1:-1)*(close?random(7.8,10.5):random(8.3,34)),
+      z:random(-2,190),
+      size:close?random(.9,1.3):random(.85,1.75),
+      seed:random(0,100)
+    });
+  }
+
+  return objects;
+}
+
+function addObject(type,x,z,extra={}){
+  const object={
+    type,
+    decor:false,
+    x,
+    baseX:x,
+    z,
+    size:1,
+    seed:random(0,100),
+    phase:random(0,Math.PI*2),
+    passed:false,
+    width:type==="pit"?random(2.6,3.3):1.6,
+    length:type==="pit"?random(4.1,5.2):1.6,
+    amplitude:random(.8,1.5),
+    ...extra
+  };
+
+  snow.objects.push(object);
+  return object;
+}
+
+function hazardRadius(object){
+  if(object.type==="pit")return object.width/2+.35;
+  if(object.type==="snowball")return 1.1+object.amplitude;
+  if(object.type==="tree")return 1.05*object.size;
+  return 1.15;
+}
+
+function pointIsClear(x,z,objects,margin=.7){
+  return objects.every(object=>{
+    const depth=object.type==="pit"?object.length/2:1.1;
+
+    return Math.abs(z-object.z)>depth+1.5 ||
+      Math.abs(x-object.x)>hazardRadius(object)+margin;
+  });
+}
+
+// Generate short, irregular sections instead of fixed lanes.
+function generateSection(z){
+  const previous=snow.safeX;
+  const next=clamp(previous+random(-1.9,1.9),-4.8,4.8);
+
+  // Keep a corridor between neighboring sections.
+  const corridorMin=Math.min(previous,next)-1.05;
+  const corridorMax=Math.max(previous,next)+1.05;
+
+  const count=Math.random()<.3?3:2;
+  const added=[];
+
+  for(let index=0;index<count;index++){
+    const roll=Math.random();
+
+    const type=roll<.44?"tree":
+      roll<.66?"rock":
+      roll<.84?"pit":"snowball";
+
+    const width=type==="pit"?random(2.6,3.3):1.6;
+    const amplitude=type==="snowball"?random(.7,1.35):0;
+    const size=type==="tree"?random(.85,1.15):1;
+
+    const radius=type==="pit"?width/2+.35:
+      type==="snowball"?1.1+amplitude:
+      type==="tree"?1.05*size:1.15;
+
+    let placed=false;
+
+    for(let attempt=0;attempt<45;attempt++){
+      const x=random(-6,6);
+      const objectZ=z+random(-1.7,1.7);
+
+      const blocksCorridor=
+        x+radius>corridorMin &&
+        x-radius<corridorMax;
+
+      const overlaps=added.some(other=>
+        Math.abs(x-other.x)<radius+hazardRadius(other)+.25
+      );
+
+      if(blocksCorridor||overlaps)continue;
+
+      added.push(addObject(type,x,objectZ,{
+        width,amplitude,size
+      }));
+
+      placed=true;
+      break;
+    }
+
+    // At least one obstacle per section.
+    if(!placed&&added.length===0){
+      const leftRoom=corridorMin+6.2;
+      const rightRoom=6.2-corridorMax;
+      const x=leftRoom>rightRoom?-5.7:5.7;
+      added.push(addObject("tree",x,z,{size:.9}));
+    }
+  }
+
+  // Scatter presents independently across width and depth.
+  // Avoid placing them inside hazards or making a straight trail.
+  const giftCount=Math.random()<.45?3:2;
+  const localGifts=[];
+
+  for(let i=0;i<giftCount;i++){
+    for(let attempt=0;attempt<40;attempt++){
+      const x=random(-5.9,5.9);
+      const giftZ=z+random(-2,9.2);
+
+      const tooAligned=
+        snow.lastGiftX!==null &&
+        Math.abs(x-snow.lastGiftX)<1.05;
+
+      const overlapsGift=localGifts.some(g=>
+        Math.abs(g.x-x)<1 &&
+        Math.abs(g.z-giftZ)<2
+      );
+
+      const nearbyHazards=snow.objects.filter(o=>
+        !o.decor&&o.type!=="gift"&&Math.abs(o.z-giftZ)<9
+      );
+
+      if(
+        tooAligned ||
+        overlapsGift ||
+        !pointIsClear(x,giftZ,nearbyHazards,.5)
+      )continue;
+
+      localGifts.push(addObject("gift",x,giftZ,{
+        color:Math.floor(random(0,3))
+      }));
+
+      snow.lastGiftX=x;
+      break;
+    }
+  }
+
+  snow.safeX=next;
+}
+
+function resetSnow(){
+  snow={
+    x:0,y:0,vy:0,lean:0,
+    distance:0,gifts:0,speed:23,time:0,
+    shake:0,flash:0,
+    notice:"",noticeTime:0,
+    safeX:0,lastGiftX:null,
+    nextSectionDistance:0,
+    objects:makeForest(),
+    powder:[]
+  };
+
+  let z=25;
+
+  while(z<185){
+    generateSection(z);
+    z+=random(11.5,15);
+  }
+
+  snow.nextSectionDistance=z;
+  updateSnowHud();
+}
+
+function score(){
+  return Math.floor(snow.distance*2)+snow.gifts*100;
+}
+
+function updateSnowHud(){
+  $("score").textContent=score();
+  $("gifts").textContent=snow.gifts;
+  $("speed").textContent=Math.round(snow.speed*3.6);
+}
+
+function notice(text){
+  snow.notice=text;
+  snow.noticeTime=1.05;
+}
+
+function showOverlay(title,message,button){
+  $("title").textContent=title;
+  $("message").textContent=message;
+  $("play").textContent=button;
+  $("overlay").classList.remove("hidden");
+}
+
+function startSnow(){
+  resetSnow();
+  keys.clear();
+  held.left=held.right=false;
+  mode="playing";
+  $("overlay").classList.add("hidden");
+  $("snowPause").textContent="Pause";
+  notice("EVERY RUN IS DIFFERENT");
+}
+
+function pauseSnow(){
+  if(mode==="playing"){
+    mode="paused";
+    keys.clear();
+    held.left=held.right=false;
+    $("snowPause").textContent="Resume";
+    showOverlay("PAUSED","The mountain can wait.","Keep riding");
+  }else if(mode==="paused"){
+    mode="playing";
+    $("overlay").classList.add("hidden");
+    $("snowPause").textContent="Pause";
+  }
+}
+
+function crash(reason){
+  if(mode!=="playing")return;
+
+  mode="over";
+  snow.shake=13;
+  best=Math.max(best,score());
+
+  save("chill-combined-snow-best",best);
+  $("best").textContent=best;
+
+  updateSnowHud();
+
+  showOverlay(
+    "WIPEOUT!",
+    `${reason} Score: ${score()} · Gifts: ${snow.gifts}.`,
+    "Ride again"
+  );
+}
+
+function spawnPowder(amount){
+  for(let i=0;i<amount;i++){
+    snow.powder.push({
+      x:W/2+random(-65,65),
+      y:H-random(25,70),
+      vx:random(-130,130)-snow.lean*90,
+      vy:random(-170,-35),
+      life:random(.2,.6),
+      size:random(1.5,4.5)
+    });
+  }
+}
+
+function jump(){
+  if(active==="snow"&&mode==="playing"&&snow.y===0){
+    snow.vy=9.7;
+    spawnPowder(12);
+  }
+}
+
+$("play").onclick=()=>mode==="paused"?pauseSnow():startSnow();
+$("snowPause").onclick=pauseSnow;
+
+function updateSnow(dt){
+  if(mode!=="playing"){
+    snow.shake*=Math.exp(-8*dt);
+    return;
+  }
+
+  const steps=Math.max(1,Math.ceil(dt/.012));
+  const step=dt/steps;
+
+  for(let iteration=0;iteration<steps;iteration++){
+    if(mode!=="playing")break;
+
+    snow.time+=step;
+
+    const direction=
+      Number(keys.has("ArrowRight")||keys.has("KeyD")||held.right)-
+      Number(keys.has("ArrowLeft")||keys.has("KeyA")||held.left);
+
+    snow.x=clamp(snow.x+direction*9.8*step,-6.2,6.2);
+    snow.lean+=(direction-snow.lean)*Math.min(1,step*10);
+
+    if(snow.y>0||snow.vy>0){
+      snow.vy-=22*step;
+      snow.y+=snow.vy*step;
+
+      if(snow.y<0){
+        snow.y=snow.vy=0;
+        snow.shake=3;
+        spawnPowder(16);
+      }
+    }
+
+    snow.speed=Math.min(42,23+snow.distance*.008);
+    const travel=snow.speed*step;
+    snow.distance+=travel;
+
+    for(const object of snow.objects){
+      object.z-=travel;
+
+      if(object.decor){
+        if(object.z< -4){
+          object.z=random(180,195);
+          object.x=(object.x<0?-1:1)*random(8.2,30);
+        }
+        continue;
+      }
+
+      if(object.type==="snowball"){
+        object.x=clamp(
+          object.baseX+
+          Math.sin(snow.time*1.75+object.phase)*object.amplitude,
+          -6.2,6.2
+        );
+      }
+
+      if(object.collected)continue;
+
+      if(object.type==="pit"){
+        const insideX=
+          Math.abs(object.x-snow.x)<object.width/2+.22;
+        const insideZ=
+          Math.abs(object.z)<object.length/2;
+
+        if(insideX&&insideZ&&snow.y<.38){
+          crash("You fell into an icy pit!");
+          break;
+        }
+
+        if(!object.passed&&object.z< -object.length/2){
+          object.passed=true;
+          if(insideX)notice("NICE JUMP!");
+        }
+
+        continue;
+      }
+
+      const range=object.type==="tree"?.93*object.size:
+        object.type==="snowball"?1.08:
+        object.type==="gift"?.87:1.05;
+
+      if(
+        Math.abs(object.z)<.7 &&
+        Math.abs(object.x-snow.x)<range
+      ){
+        if(object.type==="gift"){
+          if(snow.y<1.8){
+            object.collected=true;
+            snow.gifts++;
+            snow.flash=.22;
+            notice("+100 GIFT");
+          }
+        }else if(object.type==="tree"){
+          crash("You hit a tree!");
+          break;
+        }else if(object.type==="rock"&&snow.y<1.05){
+          crash("Jump over the rocks!");
+          break;
+        }else if(object.type==="snowball"&&snow.y<1.65){
+          crash("A rolling snowball caught you!");
+          break;
+        }
+      }
+    }
+
+    if(mode==="playing"){
+      while(snow.nextSectionDistance-snow.distance<185){
+        generateSection(snow.nextSectionDistance-snow.distance);
+
+        const spacing=clamp(13.5-snow.distance*.0008,11.5,13.5);
+        snow.nextSectionDistance+=random(spacing-1,spacing+1.5);
+      }
+    }
+  }
+
+  snow.objects=snow.objects.filter(object=>
+    object.decor||(!object.collected&&object.z> -4.4)
+  );
+
+  if(mode==="playing"&&snow.y===0&&Math.random()<.65){
+    spawnPowder(Math.abs(snow.lean)>.3?3:1);
+  }
+
+  for(const particle of snow.powder){
+    particle.x+=particle.vx*dt;
+    particle.y+=particle.vy*dt;
+    particle.vy+=270*dt;
+    particle.life-=dt;
+  }
+
+  snow.powder=snow.powder.filter(p=>p.life>0).slice(-150);
+  snow.flash=Math.max(0,snow.flash-dt);
+  snow.noticeTime=Math.max(0,snow.noticeTime-dt);
+  snow.shake*=Math.exp(-8*dt);
+
+  updateSnowHud();
+}
+
+// PERSPECTIVE GRAPHICS
+
+function project(x,y,z){
+  const depth=z+7;
+  if(depth<=.3)return null;
+
+  const scale=focal/depth;
+
+  return{
+    x:W/2+(x-snow.x*.94)*scale,
+    y:horizon+(2.7+snow.y*.57-y)*scale,
+    s:scale
+  };
+}
+
+function polygon(points,fill){
+  if(!points.length)return;
+
+  ctx.fillStyle=fill;
+  ctx.beginPath();
+
+  points.forEach((p,i)=>{
+    if(i===0)ctx.moveTo(p[0],p[1]);
+    else ctx.lineTo(p[0],p[1]);
+  });
+
+  ctx.closePath();
+  ctx.fill();
+}
+
+function face(vertices,color){
+  const points=vertices.map(p=>project(...p));
+  if(points.some(p=>!p))return;
+  polygon(points.map(p=>[p.x,p.y]),color);
+}
+
+function ellipse(x,y,rx,ry,color){
+  ctx.fillStyle=color;
+  ctx.beginPath();
+  ctx.ellipse(
+    x,y,Math.max(.1,rx),Math.max(.1,ry),0,0,Math.PI*2
+  );
+  ctx.fill();
+}
+
+function box(x,y,z,width,height,depth,colors){
+  const a=x-width/2,b=x+width/2;
+  const near=z-depth/2,far=z+depth/2;
+
+  face([
+    [a,y+height,near],[b,y+height,near],
+    [b,y+height,far],[a,y+height,far]
+  ],colors[0]);
+
+  const side=snow.x>x?b:a;
+
+  face([
+    [side,y,near],[side,y,far],
+    [side,y+height,far],[side,y+height,near]
+  ],colors[2]);
+
+  face([
+    [a,y,near],[b,y,near],
+    [b,y+height,near],[a,y+height,near]
+  ],colors[1]);
+}
+
+function drawSky(){
+  const sky=ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,"#69a9d2");
+  sky.addColorStop(.32,"#c5e4f2");
+  sky.addColorStop(.6,"#edf7fb");
+  sky.addColorStop(1,"#edf8ff");
+
+  ctx.fillStyle=sky;
+  ctx.fillRect(0,0,W,H);
+
+  const sx=W*.79-snow.x*1.5;
+  const sy=H*.12;
+  const radius=Math.min(W,H)*.045;
+
+  const glow=ctx.createRadialGradient(
+    sx,sy,radius*.2,sx,sy,radius*5
+  );
+
+  glow.addColorStop(0,"#fff7cf88");
+  glow.addColorStop(1,"#fff7cf00");
+
+  ctx.fillStyle=glow;
+  ctx.fillRect(0,0,W,H);
+  ellipse(sx,sy,radius,radius,"#fff8df");
+
+  for(let i=0;i<8;i++){
+    const x=(i*175+20)/1200*W-snow.x*.8;
+    const y=(30+i%3*25)/680*H+18;
+    const size=30+i%4*11;
+
+    for(let j=0;j<4;j++){
+      ellipse(
+        x+j*size*.6,
+        y+Math.sin(j*2)*5,
+        size,size*.2,"#ffffff25"
+      );
+    }
+  }
+
+  for(let layer=0;layer<3;layer++){
+    const scale=W/1100;
+    const base=horizon+25+layer*12;
+
+    for(let i=-2;i<10;i++){
+      const x=i*190*scale-snow.x*(layer+1)*2;
+      const mountainHeight=
+        85+Math.sin((i+20)*3.12)*32+((i+20)%3)*20;
+      const peak=base-mountainHeight*(.68+layer*.12);
+
+      polygon([
+        [x-110*scale,base],
+        [x+65*scale,peak],
+        [x+270*scale,base]
+      ],["#c1dae7","#a9c9db","#8eafc5"][layer]);
+
+      polygon([
+        [x+65*scale,peak],
+        [x+29*scale,peak+34],
+        [x+58*scale,peak+27],
+        [x+83*scale,peak+45],
+        [x+124*scale,peak+43]
+      ],["#f8fcff","#eef8fd","#e4f2fa"][layer]);
+
+      polygon([
+        [x+65*scale,peak],
+        [x+88*scale,peak+58],
+        [x+195*scale,base],
+        [x+270*scale,base]
+      ],["#aacbdc66","#8eb3cb66","#789ab566"][layer]);
+    }
+  }
+}
+
+function drawGround(){
+  const gradient=ctx.createLinearGradient(0,horizon,0,H);
+  gradient.addColorStop(0,"#d9eaf2");
+  gradient.addColorStop(.5,"#eaf5fb");
+  gradient.addColorStop(1,"#d8eaf6");
+
+  ctx.fillStyle=gradient;
+  ctx.fillRect(0,horizon+35,W,H);
+
+  face([
+    [-7.2,0,195],[7.2,0,195],
+    [7.2,0,-4.3],[-7.2,0,-4.3]
+  ],"#f5fbff");
+
+  for(const side of[-1,1]){
+    face([
+      [side*7.1,.012,195],[side*7.7,.012,195],
+      [side*7.7,.012,-4.3],[side*7.1,.012,-4.3]
+    ],"#c3dce9");
+
+    face([
+      [side*7.7,.02,195],[side*8.7,.02,195],
+      [side*8.7,.02,-4.3],[side*7.7,.02,-4.3]
+    ],"#e7f3fa");
+  }
+
+  for(let i=0;i<85;i++){
+    const z=((i*2.4-snow.distance)%200+200)%200;
+    const x=Math.sin(i*13.71)*6.6;
+    const length=.8+i%4*.6;
+
+    face([
+      [x,.01,z],[x+.025,.01,z],
+      [x+.025,.01,z+length],[x,.01,z+length]
+    ],i%3?"#c8deeb75":"#ffffff");
+  }
+
+  for(let i=0;i<32;i++){
+    const z=((i*5.8-snow.distance*.95)%185+185)%185;
+    const point=project(Math.sin(i*21.4)*6.5,.025,z);
+
+    if(point){
+      const size=clamp(point.s*.015,.3,1.7);
+      ellipse(point.x,point.y,size,size,"#ffffffcc");
+    }
+  }
+}
+
+function drawTree(object){
+  const point=project(object.x,0,object.z);
+  if(!point)return;
+
+  const scale=point.s*object.size;
+
+  if(
+    point.x< -scale*3 ||
+    point.x>W+scale*3 ||
+    scale<.5
+  )return;
+
+  ellipse(
+    point.x+scale*.45,
+    point.y+scale*.04,
+    scale*1.6,scale*.19,"#678caa23"
+  );
+
+  box(
+    object.x,0,object.z,
+    .25*object.size,1.3*object.size,.25*object.size,
+    ["#a17a57","#765039","#5e4436"]
+  );
+
+  const layers=scale>12?5:4;
+
+  for(let layer=0;layer<layers;layer++){
+    const bottom=(.45+layer*.7)*object.size;
+    const top=bottom+1.75*object.size;
+    const radius=(1.3-layer*.21)*object.size;
+    const faces=[];
+
+    for(let i=0;i<7;i++){
+      const a=i/7*Math.PI*2+object.seed;
+      const b=(i+1)/7*Math.PI*2+object.seed;
+
+      faces.push({
+        ax:object.x+Math.cos(a)*radius,
+        az:object.z+Math.sin(a)*radius,
+        bx:object.x+Math.cos(b)*radius,
+        bz:object.z+Math.sin(b)*radius,
+        i
+      });
+    }
+
+    faces.sort((a,b)=>(b.az+b.bz)-(a.az+a.bz));
+
+    for(const f of faces){
+      face([
+        [f.ax,bottom,f.az],
+        [f.bx,bottom,f.bz],
+        [object.x,top,object.z]
+      ],["#245c53","#2b7160","#37846e","#1e514b"][f.i%4]);
+
+      const amount=.57+Math.sin(f.i*4+object.seed)*.07;
+
+      face([
+        [object.x,top,object.z],
+        [
+          object.x+(f.ax-object.x)*amount,
+          top+(bottom-top)*amount,
+          object.z+(f.az-object.z)*amount
+        ],
+        [
+          object.x+(f.bx-object.x)*amount,
+          top+(bottom-top)*amount,
+          object.z+(f.bz-object.z)*amount
+        ]
+      ],["#ffffff","#e1f0f9","#d2e6f3"][f.i%3]);
+    }
+  }
+
+  if(scale>22){
+    for(let i=0;i<5;i++){
+      const p=project(
+        object.x+Math.sin(object.seed+i*3)*.7*object.size,
+        (.8+i*.56)*object.size,
+        object.z-.2
+      );
+
+      if(p){
+        ellipse(p.x,p.y,scale*.11,scale*.045,"#f9fdff");
+      }
+    }
+  }
+}
+
+function drawPit(object){
+  const x=object.x,z=object.z;
+  const w=object.width/2,length=object.length/2;
+
+  face([
+    [x-w-.22,.018,z-length-.22],
+    [x+w+.22,.018,z-length-.22],
+    [x+w+.22,.018,z+length+.22],
+    [x-w-.22,.018,z+length+.22]
+  ],"#9fc8df");
+
+  face([
+    [x-w,.025,z-length],[x+w,.025,z-length],
+    [x+w,.025,z+length],[x-w,.025,z+length]
+  ],"#18384e");
+
+  face([
+    [x-w+.17,.03,z-length+.2],
+    [x+w-.17,.03,z-length+.2],
+    [x+w-.2,.03,z+length-.3],
+    [x-w+.2,.03,z+length-.3]
+  ],"#0a2135");
+
+  face([
+    [x-w,.035,z+length],[x+w,.035,z+length],
+    [x+w-.25,.035,z+length-.85],
+    [x-w+.25,.035,z+length-.85]
+  ],"#5b8eac");
+
+  for(let i=0;i<7;i++){
+    const px=x-w+i/6*object.width;
+    const tooth=.2+i%3*.13;
+
+    face([
+      [px-.17,.05,z+length],
+      [px+.17,.05,z+length],
+      [px,.05,z+length-tooth]
+    ],"#edf9ff");
+
+    face([
+      [px-.15,.05,z-length],
+      [px+.15,.05,z-length],
+      [px+.05,.05,z-length+tooth]
+    ],"#f9fdff");
+  }
+
+  for(const side of[-1,1]){
+    face([
+      [x+side*w,.02,z],
+      [x+side*(w+.6),.02,z+.35],
+      [x+side*(w+.45),.02,z+.39]
+    ],"#9bbfd5");
+  }
+}
+
+function drawRock(object){
+  const x=object.x,z=object.z;
+  const point=project(x,0,z);
+  if(!point)return;
+
+  ellipse(
+    point.x+point.s*.2,point.y,
+    point.s*1.1,point.s*.17,"#6486a52c"
+  );
+
+  face([
+    [x-.95,0,z-.5],[x+.85,0,z-.5],
+    [x+.65,.8,z-.15],[x-.3,1.05,z-.1],
+    [x-.85,.55,z-.35]
+  ],"#7f98ad");
+
+  face([
+    [x+.85,0,z-.5],[x+.95,.15,z+.45],
+    [x+.5,.85,z+.3],[x-.3,1.05,z-.1],
+    [x+.65,.8,z-.15]
+  ],"#a0b9cb");
+
+  face([
+    [x-.85,.55,z-.35],[x-.3,1.05,z-.1],
+    [x+.5,.85,z+.3],[x+.65,.8,z-.15],
+    [x+.1,.69,z-.35],[x-.4,.8,z-.4]
+  ],"#f2fbff");
+}
+
+function drawSnowball(object){
+  const ground=project(object.x,0,object.z);
+  const point=project(object.x,.85,object.z);
+  if(!ground||!point)return;
+
+  const radius=point.s*.87;
+
+  ellipse(
+    ground.x+radius*.18,ground.y,
+    radius*1.15,radius*.26,"#597f9d40"
+  );
+
+  face([
+    [object.x-.55,.014,object.z+.4],
+    [object.x+.55,.014,object.z+.4],
+    [object.x+.4,.014,object.z+3.8],
+    [object.x-.4,.014,object.z+3.8]
+  ],"#c5dce966");
+
+  const shade=ctx.createRadialGradient(
+    point.x-radius*.35,point.y-radius*.4,radius*.05,
+    point.x+radius*.2,point.y+radius*.2,radius*1.1
+  );
+
+  shade.addColorStop(0,"#ffffff");
+  shade.addColorStop(.5,"#eaf6ff");
+  shade.addColorStop(.85,"#b8d4e8");
+  shade.addColorStop(1,"#87abc9");
+
+  ellipse(point.x,point.y,radius,radius,shade);
+
+  const rotation=snow.time*3.5+object.phase;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(point.x,point.y,radius*.98,0,Math.PI*2);
+  ctx.clip();
+
+  ctx.strokeStyle="#8bafcc70";
+  ctx.lineWidth=Math.max(1,radius*.035);
+  ctx.beginPath();
+  ctx.ellipse(
+    point.x,point.y,radius*.48,radius*1.04,
+    rotation,0,Math.PI*2
+  );
+  ctx.stroke();
+
+  for(let i=0;i<15;i++){
+    const angle=i*2.4+rotation;
+    const r=radius*(.2+i%4*.17);
+
+    ellipse(
+      point.x+Math.cos(angle)*r,
+      point.y+Math.sin(angle)*r,
+      Math.max(.5,radius*.035),
+      Math.max(.5,radius*.022),
+      i%2?"#ffffffa0":"#95b7cf70"
+    );
+  }
+
+  ctx.restore();
+
+  for(let i=0;i<6;i++){
+    const angle=snow.time*5+i*2;
+
+    ellipse(
+      ground.x+Math.sin(angle)*radius*1.4,
+      ground.y-Math.abs(Math.cos(angle))*radius*.3,
+      Math.max(.7,radius*.06),
+      Math.max(.7,radius*.04),
+      "#ffffffa0"
+    );
+  }
+}
+
+function drawGift(object){
+  const bob=.25+Math.sin(snow.time*4+object.seed)*.12;
+  const point=project(object.x,.7+bob,object.z);
+  const ground=project(object.x,0,object.z);
+  if(!point||!ground)return;
+
+  const palettes=[
+    ["#ffe497","#f7b83c","#cd8729"],
+    ["#a9f6e4","#4ac6ae","#278e83"],
+    ["#e5caff","#b286ee","#8057b8"]
+  ];
+
+  const colors=palettes[object.color||0];
+
+  ellipse(
+    ground.x,ground.y,
+    point.s*.55,point.s*.12,"#8c926c25"
+  );
+
+  const glow=ctx.createRadialGradient(
+    point.x,point.y,0,
+    point.x,point.y,Math.max(1,point.s*1.3)
+  );
+
+  glow.addColorStop(0,"#ffe6a33a");
+  glow.addColorStop(1,"#ffe6a300");
+
+  ellipse(point.x,point.y,point.s*1.3,point.s*1.3,glow);
+
+  box(object.x,bob,object.z,.75,.75,.75,colors);
+
+  box(
+    object.x,bob,object.z-.01,.13,.77,.78,
+    ["#ffb0a9","#e34b64","#b83954"]
+  );
+
+  box(
+    object.x,bob+.31,object.z-.01,.78,.13,.78,
+    ["#ffb0a9","#e34b64","#b83954"]
+  );
+
+  const top=project(object.x,bob+.86,object.z);
+  if(!top)return;
+
+  ctx.strokeStyle="#e85870";
+  ctx.lineWidth=Math.max(1,top.s*.045);
+
+  for(const side of[-1,1]){
+    ctx.beginPath();
+    ctx.ellipse(
+      top.x+side*top.s*.12,top.y,
+      top.s*.13,top.s*.07,side*-.5,0,Math.PI*2
+    );
+    ctx.stroke();
+  }
+}
+
+function drawObjects(){
+  const sorted=[...snow.objects].sort((a,b)=>b.z-a.z);
+
+  for(const object of sorted){
+    if(object.collected)continue;
+
+    const point=project(object.x,0,object.z);
+
+    if(
+      !point ||
+      point.x< -point.s*4 ||
+      point.x>W+point.s*4
+    )continue;
+
+    if(object.type==="tree")drawTree(object);
+    else if(object.type==="pit")drawPit(object);
+    else if(object.type==="rock")drawRock(object);
+    else if(object.type==="snowball")drawSnowball(object);
+    else drawGift(object);
+  }
+}
+
+function drawSled(){
+  const scale=Math.min(W/850,H/610);
+  const bounce=mode==="playing"&&snow.y===0?
+    Math.sin(snow.time*25)*1.2:0;
+
+  if(snow.y>0){
+    ellipse(W/2,H-15,75*scale,13*scale,"#496f8b25");
+  }
+
+  ctx.save();
+  ctx.translate(W/2+snow.lean*13,H-52-snow.y*23+bounce);
+  ctx.scale(scale,scale);
+  ctx.rotate(-snow.lean*.07);
+  ctx.lineCap="round";
+
+  for(const side of[-1,1]){
+    ctx.strokeStyle="#344f65";
+    ctx.lineWidth=13;
+    ctx.beginPath();
+    ctx.moveTo(side*87,52);
+    ctx.lineTo(side*62,-68);
+    ctx.quadraticCurveTo(side*55,-99,side*41,-86);
+    ctx.stroke();
+
+    ctx.strokeStyle="#b7d0df";
+    ctx.lineWidth=3;
+    ctx.beginPath();
+    ctx.moveTo(side*86,44);
+    ctx.lineTo(side*61,-69);
+    ctx.quadraticCurveTo(side*55,-92,side*43,-85);
+    ctx.stroke();
+  }
+
+  polygon([[-71,20],[-48,-75],[48,-75],[71,20]],"#9c4d32");
+
+  const wood=ctx.createLinearGradient(0,-75,0,20);
+  wood.addColorStop(0,"#db965e");
+  wood.addColorStop(.5,"#bb7041");
+  wood.addColorStop(1,"#e1a36b");
+
+  polygon([[-64,10],[-44,-81],[44,-81],[64,10]],wood);
+
+  ctx.strokeStyle="#82462c";
+  ctx.lineWidth=2;
+
+  for(let i=-2;i<=2;i++){
+    ctx.beginPath();
+    ctx.moveTo(i*16,-74);
+    ctx.lineTo(i*22,6);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle="#edbf87";
+  ctx.lineWidth=1;
+
+  for(let i=0;i<10;i++){
+    const x=-40+i*9;
+    ctx.beginPath();
+    ctx.moveTo(x,-63);
+    ctx.bezierCurveTo(x+5,-40,x-3,-25,x+7,-5);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle="#f6fcff";
+  ctx.lineWidth=4;
+  ctx.beginPath();
+  ctx.moveTo(-43,-79);
+  ctx.lineTo(43,-79);
+  ctx.stroke();
+
+  polygon([[-43,29],[-39,-35],[-16,-37],[-12,29]],"#26425c");
+  polygon([[12,29],[16,-37],[39,-35],[43,29]],"#26425c");
+
+  for(const side of[-1,1]){
+    const x=side*28;
+
+    const boot=ctx.createLinearGradient(x-14,-70,x+14,-20);
+    boot.addColorStop(0,"#39556b");
+    boot.addColorStop(1,"#152c40");
+
+    ctx.fillStyle=boot;
+    ctx.fillRect(x-14,-65,28,43);
+
+    ctx.fillStyle="#6d899e";
+    ctx.fillRect(x-14,-26,28,5);
+
+    ctx.strokeStyle="#b0bbc2";
+    ctx.lineWidth=1.3;
+
+    for(let i=0;i<4;i++){
+      ctx.beginPath();
+      ctx.moveTo(x-8,-54+i*6);
+      ctx.lineTo(x+8,-50+i*6);
+      ctx.stroke();
+    }
+  }
+
+  ctx.strokeStyle="#7c6247";
+  ctx.lineWidth=5;
+  ctx.beginPath();
+  ctx.moveTo(-57,-77);
+  ctx.quadraticCurveTo(0,-30,57,-77);
+  ctx.stroke();
+
+  ctx.strokeStyle="#f2d6a6";
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(-57,-79);
+  ctx.quadraticCurveTo(0,-32,57,-79);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawWeather(){
+  for(let i=0;i<75;i++){
+    const speed=18+i%5*8;
+
+    const x=(
+      i*137.7+
+      Math.sin(i+snow.time*.4)*20-
+      snow.lean*(i%3)*4+
+      W*10
+    )%W;
+
+    const y=(i*73.3+snow.time*speed)%H;
+    const radius=.7+i%3*.55;
+
+    ellipse(
+      x,y,radius,radius,
+      i%3?"#ffffffa0":"#ffffff60"
+    );
+  }
+
+  for(const particle of snow.powder){
+    ctx.globalAlpha=clamp(particle.life/.6,0,1);
+
+    ellipse(
+      particle.x,particle.y,
+      particle.size,particle.size*.75,"#ffffff"
+    );
+  }
+
+  ctx.globalAlpha=1;
+
+  if(snow.flash>0){
+    ctx.fillStyle=`rgba(255,236,165,${snow.flash*.22})`;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  const vignette=ctx.createRadialGradient(
+    W/2,H*.43,Math.min(W,H)*.2,
+    W/2,H*.43,Math.max(W,H)*.8
+  );
+
+  vignette.addColorStop(0,"#183f5c00");
+  vignette.addColorStop(1,"#183f5c35");
+
+  ctx.fillStyle=vignette;
+  ctx.fillRect(0,0,W,H);
+}
+
+function drawSnow(){
+  ctx.save();
+
+  if(snow.shake>.1){
+    ctx.translate(
+      random(-snow.shake/2,snow.shake/2),
+      random(-snow.shake/2,snow.shake/2)
+    );
+  }
+
+  drawSky();
+  drawGround();
+  drawObjects();
+  drawSled();
+  drawWeather();
+
+  ctx.restore();
+
+  $("snowNotice").textContent=
+    snow.noticeTime>0?snow.notice:"";
+}
+
+function bindDirection(id,direction){
+  const button=$(id);
+
+  button.onpointerdown=event=>{
+    event.preventDefault();
+    held[direction]=true;
+    button.setPointerCapture(event.pointerId);
+  };
+
+  button.onpointerup=
+  button.onpointercancel=
+  button.onlostpointercapture=()=>{
+    held[direction]=false;
+  };
+}
+
+bindDirection("left","left");
+bindDirection("right","right");
+
+$("jump").onpointerdown=event=>{
+  event.preventDefault();
+  jump();
+};
+
+addEventListener("keydown",event=>{
+  if(active!=="snow")return;
+
+  if(["ArrowLeft","ArrowRight","ArrowUp","Space"].includes(event.code)){
+    event.preventDefault();
+  }
+
+  keys.add(event.code);
+
+  if(!event.repeat){
+    if(event.code==="Space"||event.code==="ArrowUp")jump();
+    if(event.code==="KeyP")pauseSnow();
+  }
+});
+
+addEventListener("keyup",event=>keys.delete(event.code));
+
+addEventListener("blur",()=>{
+  keys.clear();
+  held.left=held.right=false;
+  if(mode==="playing")pauseSnow();
+});
+
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden&&mode==="playing")pauseSnow();
+});
+
+// IDLE BRICKS
+
+const idleCanvas=$("idleCanvas");
+const ic=idleCanvas.getContext("2d");
+const IW=960,IH=540;
+const stored=read("chill-combined-idle",{})||{};
+
+let idle={
+  coins:Math.max(0,Number(stored.coins)||0),
+  level:Math.max(1,Math.floor(Number(stored.level)||1)),
+  count:clamp(Math.floor(Number(stored.count)||1),1,40),
+  power:Math.max(1,Math.floor(Number(stored.power)||1)),
+  speed:clamp(Math.floor(Number(stored.speed)||1),1,12)
+};
+
+let balls=[],bricks=[],particles=[];
+let idlePaused=false,saveTimer=0;
+
+function persistIdle(){
+  save("chill-combined-idle",idle);
+}
+
+function makeBall(){
+  const angle=-Math.PI*random(.2,.8);
+
+  return{
+    x:IW/2,y:IH-60,
+    vx:Math.cos(angle),vy:Math.sin(angle)
+  };
+}
+
+function makeLevel(){
+  bricks=[];
+
+  for(let row=0;row<4;row++){
+    for(let col=0;col<10;col++){
+      const hp=Math.ceil(idle.level*(1+row*.45));
+
+      bricks.push({
+        x:30+col*91,y:48+row*57,
+        w:81,h:45,hp,max:hp,hue:175+row*30
+      });
+    }
+  }
+}
+
+function hitBrick(brick,amount){
+  if(brick.hp<=0)return;
+
+  const dealt=Math.min(brick.hp,amount);
+  brick.hp-=dealt;
+  idle.coins+=dealt;
+
+  if(brick.hp===0){
+    for(let i=0;i<8;i++){
+      particles.push({
+        x:brick.x+brick.w/2,
+        y:brick.y+brick.h/2,
+        vx:random(-100,100),
+        vy:random(-100,100),
+        life:.5,
+        hue:brick.hue
+      });
+    }
+  }
+}
+
+const ballCost=()=>Math.floor(25*1.48**(idle.count-1));
+const powerCost=()=>Math.floor(40*1.65**(idle.power-1));
+const speedCost=()=>Math.floor(35*1.8**(idle.speed-1));
+
+function updateShop(){
+  $("coins").textContent=Math.floor(idle.coins).toLocaleString();
+  $("level").textContent=idle.level;
+  $("ballCount").textContent=idle.count;
+
+  $("ballPrice").textContent=idle.count>=40?
+    "Maximum reached":`${ballCost().toLocaleString()} coins`;
+
+  $("powerPrice").textContent=
+    `${powerCost().toLocaleString()} coins · Damage ${idle.power}`;
+
+  $("speedPrice").textContent=idle.speed>=12?
+    "Maximum reached":
+    `${speedCost().toLocaleString()} coins · Tier ${idle.speed}`;
+
+  $("buyBall").disabled=idle.count>=40||idle.coins<ballCost();
+  $("buyPower").disabled=idle.coins<powerCost();
+  $("buySpeed").disabled=idle.speed>=12||idle.coins<speedCost();
+}
+
+$("buyBall").onclick=()=>{
+  if(idle.count>=40||idle.coins<ballCost())return;
+
+  idle.coins-=ballCost();
+  idle.count++;
+  balls.push(makeBall());
+
+  updateShop();
+  persistIdle();
+};
+
+$("buyPower").onclick=()=>{
+  if(idle.coins<powerCost())return;
+
+  idle.coins-=powerCost();
+  idle.power++;
+
+  updateShop();
+  persistIdle();
+};
+
+$("buySpeed").onclick=()=>{
+  if(idle.speed>=12||idle.coins<speedCost())return;
+
+  idle.coins-=speedCost();
+  idle.speed++;
+
+  updateShop();
+  persistIdle();
+};
+
+$("idlePause").onclick=()=>{
+  idlePaused=!idlePaused;
+  $("idlePause").textContent=idlePaused?"Resume":"Pause";
+};
+
+$("resetIdle").onclick=()=>{
+  if(!confirm("Reset all Idle Bricks progress?"))return;
+
+  idle={coins:0,level:1,count:1,power:1,speed:1};
+  balls=[makeBall()];
+  particles=[];
+
+  makeLevel();
+  updateShop();
+  persistIdle();
+};
+
+idleCanvas.onpointerdown=event=>{
+  if(active!=="idle"||idlePaused)return;
+
+  const rect=idleCanvas.getBoundingClientRect();
+  const x=(event.clientX-rect.left)*IW/rect.width;
+  const y=(event.clientY-rect.top)*IH/rect.height;
+
+  const brick=bricks.find(b=>
+    b.hp>0&&
+    x>=b.x&&x<=b.x+b.w&&
+    y>=b.y&&y<=b.y+b.h
+  );
+
+  if(brick){
+    hitBrick(brick,idle.power);
+    updateShop();
+  }
+};
+
+function updateIdle(dt){
+  const speed=240+idle.speed*35;
+  const steps=Math.max(1,Math.ceil(speed*dt/6));
+  const step=dt/steps;
+
+  for(let s=0;s<steps;s++){
+    for(const ball of balls){
+      const oldX=ball.x,oldY=ball.y;
+
+      ball.x+=ball.vx*speed*step;
+      ball.y+=ball.vy*speed*step;
+
+      if(ball.x<7){
+        ball.x=7;ball.vx=Math.abs(ball.vx);
+      }
+
+      if(ball.x>IW-7){
+        ball.x=IW-7;ball.vx=-Math.abs(ball.vx);
+      }
+
+      if(ball.y<7){
+        ball.y=7;ball.vy=Math.abs(ball.vy);
+      }
+
+      if(ball.y>IH-7){
+        ball.y=IH-7;ball.vy=-Math.abs(ball.vy);
+      }
+
+      for(const brick of bricks){
+        if(brick.hp<=0)continue;
+
+        if(
+          ball.x+7>brick.x&&ball.x-7<brick.x+brick.w&&
+          ball.y+7>brick.y&&ball.y-7<brick.y+brick.h
+        ){
+          hitBrick(brick,idle.power);
+
+          if(
+            oldX+7<=brick.x ||
+            oldX-7>=brick.x+brick.w
+          ){
+            ball.vx*=-1;
+          }else{
+            ball.vy*=-1;
+          }
+
+          ball.x=oldX;
+          ball.y=oldY;
+          break;
+        }
+      }
+    }
+  }
+
+  for(const particle of particles){
+    particle.x+=particle.vx*dt;
+    particle.y+=particle.vy*dt;
+    particle.life-=dt;
+  }
+
+  particles=particles.filter(p=>p.life>0);
+
+  if(bricks.every(b=>b.hp<=0)){
+    idle.coins+=idle.level*20;
+    idle.level++;
+    makeLevel();
+
+    for(const ball of balls){
+      ball.x=IW/2;
+      ball.y=IH-60;
+    }
+
+    persistIdle();
+  }
+
+  saveTimer+=dt;
+
+  if(saveTimer>3){
+    persistIdle();
+    saveTimer=0;
+  }
+
+  updateShop();
+}
+
+function drawIdle(){
+  const background=ic.createLinearGradient(0,0,0,IH);
+  background.addColorStop(0,"#0e1d33");
+  background.addColorStop(1,"#080f1e");
+
+  ic.fillStyle=background;
+  ic.fillRect(0,0,IW,IH);
+  ic.strokeStyle="#ffffff07";
+
+  for(let x=0;x<IW;x+=40){
+    ic.beginPath();
+    ic.moveTo(x,0);
+    ic.lineTo(x,IH);
+    ic.stroke();
+  }
+
+  for(let y=0;y<IH;y+=40){
+    ic.beginPath();
+    ic.moveTo(0,y);
+    ic.lineTo(IW,y);
+    ic.stroke();
+  }
+
+  ic.textAlign="center";
+  ic.textBaseline="middle";
+  ic.font="bold 17px system-ui";
+
+  for(const brick of bricks){
+    if(brick.hp<=0)continue;
+
+    const light=34+14*brick.hp/brick.max;
+    const gradient=ic.createLinearGradient(
+      brick.x,brick.y,brick.x,brick.y+brick.h
+    );
+
+    gradient.addColorStop(
+      0,`hsl(${brick.hue} 70% ${light+9}%)`
+    );
+
+    gradient.addColorStop(
+      1,`hsl(${brick.hue} 65% ${light}%)`
+    );
+
+    ic.fillStyle=gradient;
+    ic.fillRect(brick.x,brick.y,brick.w,brick.h);
+
+    ic.fillStyle="#ffffff38";
+    ic.fillRect(brick.x,brick.y,brick.w,2);
+
+    ic.fillStyle="#00000020";
+    ic.fillRect(brick.x,brick.y+brick.h-3,brick.w,3);
+
+    ic.fillStyle="white";
+    ic.fillText(
+      brick.hp,
+      brick.x+brick.w/2,
+      brick.y+brick.h/2
+    );
+  }
+
+  ic.shadowBlur=14;
+  ic.shadowColor="#80f3d9";
+  ic.fillStyle="#d2fff5";
+
+  for(const ball of balls){
+    ic.beginPath();
+    ic.arc(ball.x,ball.y,6,0,Math.PI*2);
+    ic.fill();
+  }
+
+  ic.shadowBlur=0;
+
+  for(const particle of particles){
+    ic.globalAlpha=particle.life*2;
+    ic.fillStyle=`hsl(${particle.hue} 80% 70%)`;
+    ic.fillRect(particle.x,particle.y,5,5);
+  }
+
+  ic.globalAlpha=1;
+  ic.fillStyle="#879db9";
+  ic.font="14px system-ui";
+
+  ic.fillText(
+    idlePaused?"PAUSED":"CLICK BLOCKS · BUY UPGRADES · CLEAR LEVELS",
+    IW/2,IH-24
+  );
+}
+
+// TABS AND MAIN LOOP
+
+function switchGame(game){
+  if(active==="snow"&&game!=="snow"&&mode==="playing"){
+    pauseSnow();
+  }
+
+  active=game;
+  keys.clear();
+  held.left=held.right=false;
+
+  $("snowPanel").hidden=game!=="snow";
+  $("idlePanel").hidden=game!=="idle";
+
+  $("snowTab").classList.toggle("active",game==="snow");
+  $("idleTab").classList.toggle("active",game==="idle");
+
+  if(game==="snow")requestAnimationFrame(resizeSnow);
+}
+
+$("snowTab").onclick=()=>switchGame("snow");
+$("idleTab").onclick=()=>switchGame("idle");
+
+resetSnow();
+resizeSnow();
+
+balls=Array.from({length:idle.count},makeBall);
+makeLevel();
+updateShop();
+
+addEventListener("pagehide",persistIdle);
+
+let last=performance.now();
+
+function frame(now){
+  const dt=Math.min((now-last)/1000,.035);
+  last=now;
+
+  if(!document.hidden){
+    if(active==="snow"){
+      updateSnow(dt);
+      drawSnow();
+    }else{
+      if(!idlePaused)updateIdle(dt);
+      drawIdle();
+    }
+  }
+
+  requestAnimationFrame(frame);
+}
+
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
+
+
+
+
