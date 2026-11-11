@@ -1,3 +1,151 @@
+
+Continued from
+Website Code Review
+I do not see build
+Continued from
+Website Code Review
+const firebaseConfig = {
+  apiKey: "AIzaSyCLDF3NkhA1NtC3VfbVn21pXj0Rtf_Kuh4",
+  authDomain: "blockthis-5044d.firebaseapp.com",
+  projectId: "blockthis-5044d",
+  storageBucket: "blockthis-5044d.firebasestorage.app",
+  messagingSenderId: "92901086507",
+  appId: "1:92901086507:web:48764a21e48cc5f6faa16e",
+  measurementId: "G-FQ863ZGLWD"
+};
+Perfect! That's your Firebase web configuration. It gives the website the information it needs to connect to your Firebase project; it is not your account password.
+
+I'll use it to set up required email/password accounts, saved game progress, and the shared leaderboard. Your email will stay private, and players will use a separate public username.
+
+One thing I need before I can finish: please upload your current index.html file again. I can no longer access the earlier code attachment.
+
+Also, make sure you've enabled:
+
+Authentication → Email/Password
+
+Firestore Database
+
+Once you upload the file, I'll return the updated code in copyable blocks, ready to replace your GitHub version.
+
+
+Pasted text(1).txt
+Document
+
+Worked for 1m 51s
+Designed the game update
+
+Searched uploads, read the complete file, and implemented Firebase integration
+
+Refined the implementation
+
+Installed cloud features and finalized setup
+
+Added Firebase authentication and Firestore cloud-save integration
+
+I've updated your website with required email/password accounts and Firebase cloud saving.
+
+Updated HTML ready
+Download your updated index.html
+
+What's included
+Email and password required to play.
+
+Account registration and sign-in.
+
+Separate public usernames (emails stay private).
+
+Password reset option.
+
+Idle Bricks progress saved to player accounts.
+
+Snow Rider high scores saved to player accounts.
+
+Shared Snow Rider leaderboard.
+
+Sign-out button.
+
+Important: Finish your Firebase setup
+1. Enable email/password sign-in
+
+In Firebase Console:
+
+Open Authentication.
+
+Select Get started.
+
+Open Sign-in method.
+
+Enable Email/Password.
+
+If you don't see Authentication, look under All products in the left sidebar.
+
+2. Create Firestore Database
+
+Find Firestore Database under All products.
+
+Select Create database.
+
+Complete the setup.
+
+3. Set your Firestore security rules
+
+Open Firestore Database → Rules and replace the rules with:
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{userId} {
+      allow read, create, update:
+        if request.auth != null
+        && request.auth.uid == userId;
+    }
+
+    match /leaderboard/{userId} {
+      allow read: if true;
+
+      allow create, update:
+        if request.auth != null
+        && request.auth.uid == userId;
+    }
+  }
+}
+
+Click Publish.
+
+4. Authorize your GitHub website
+
+In Firebase Authentication settings, find Authorized domains and add your GitHub Pages domain.
+
+Finally, update GitHub
+Download the updated index.html above.
+
+Open your GitHub repository.
+
+Replace your existing index.html with this new one.
+
+Commit the changes.
+
+Wait for GitHub Pages to publish.
+
+Once those steps are complete, your website should require accounts before players can access either game.
+
+I checked the updated JavaScript syntax, but the live Firebase connection still needs to be tested after you publish and finish the Firebase setup.
+
+
+index.html
+HTML
+Instead of an HTML, please give a TXT
+Here is the same updated website code as a .TXT file:
+
+Download your updated index.txt
+
+Note: When uploading it to GitHub Pages, rename it from index.txt to index.html so the website can run.
+
+
+index.txt
+Document
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,6 +192,17 @@ canvas{display:block;width:100%;height:auto;touch-action:none}
 .shop button{flex:1;min-width:160px;text-align:left}
 .shop small{display:block;margin-top:5px;color:#c2d4e8}
 footer{color:#839bb6;font-size:12px;padding:23px 0;line-height:1.7}
+.auth-wrap{width:min(460px,calc(100% - 24px));margin:36px auto;padding:28px;background:#121e32;border:1px solid #ffffff20;border-radius:20px;box-shadow:0 20px 70px #00000030}
+.auth-wrap h2{margin:0 0 8px;font-size:27px}.auth-wrap p{color:#9fb5cc;line-height:1.6}
+.auth-wrap label{display:block;margin:14px 0 6px;color:#cbd9e8;font-size:13px;font-weight:650}
+.auth-wrap input{width:100%;padding:13px 14px;border:1px solid #ffffff30;border-radius:10px;background:#091426;color:#fff;font:inherit;outline:none}
+.auth-wrap input:focus{border-color:#83ebdc}.auth-wrap button{width:100%;margin-top:14px;background:#83ebdc;color:#09252d;border:0}
+.auth-switch{background:transparent!important;color:#83ebdc!important;border:1px solid #ffffff30!important}
+.auth-error{min-height:20px;color:#ff9c9c!important;font-size:13px}
+.account-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 14px;padding:12px 16px;background:#121e32;border:1px solid #ffffff20;border-radius:14px;color:#cbd9e8}
+.leaderboard{margin:0 0 16px;padding:16px 18px;background:#121e32;border:1px solid #ffffff20;border-radius:16px}
+.leaderboard h2{margin:0 0 10px;font-size:18px}.leaderboard ol{margin:0;padding-left:24px;color:#cbd9e8}
+.leaderboard li{padding:4px 0}.leaderboard small{color:#9fb5cc}
 [hidden],.hidden{display:none!important}
 @media(max-width:550px){
 nav button{flex:1}.stats{gap:15px}.stat span{font-size:21px}
@@ -59,7 +218,34 @@ nav button{flex:1}.stats{gap:15px}.stat span{font-size:21px}
   <p>Fresh runs. Random obstacles. Your next high score.</p>
 </header>
 
-<main>
+<section id="authScreen" class="auth-wrap">
+  <h2 id="authTitle">Sign in to BlockThis</h2>
+  <p id="authDescription">Use your account to play and keep your progress saved across devices.</p>
+  <form id="authForm">
+    <div id="usernameField" hidden>
+      <label for="authUsername">Public username</label>
+      <input id="authUsername" type="text" maxlength="20" autocomplete="nickname" placeholder="Choose a username">
+    </div>
+    <label for="authEmail">Email address</label>
+    <input id="authEmail" type="email" autocomplete="email" required maxlength="254" placeholder="you@example.com">
+    <label for="authPassword">Password</label>
+    <input id="authPassword" type="password" autocomplete="current-password" required minlength="6" placeholder="At least 6 characters">
+    <button id="authSubmit" type="submit">Sign in</button>
+  </form>
+  <button id="authToggle" class="auth-switch" type="button">Create an account</button>
+  <button id="forgotPassword" class="auth-switch" type="button">Forgot password?</button>
+  <p id="authError" class="auth-error" role="alert"></p>
+</section>
+
+<main id="gameArea" hidden>
+  <div class="account-bar">
+    <span>Signed in as <strong id="currentUsername"></strong> <small id="accountStatus"></small></span>
+    <button id="signOut" type="button">Sign out</button>
+  </div>
+  <section class="leaderboard">
+    <h2>Snow Rider Leaderboard</h2>
+    <ol id="leaderboardList"><li>Loading leaderboard…</li></ol>
+  </section>
   <nav aria-label="Choose game">
     <button id="snowTab" class="active">Snow Rider</button>
     <button id="idleTab">Idle Bricks</button>
@@ -136,7 +322,7 @@ nav button{flex:1}.stats{gap:15px}.stat span{font-size:21px}
 
     <p class="help">
       Click bricks to damage them. Buy balls, damage, and speed upgrades.
-      Progress saves when browser storage is available.
+      Progress saves to your account automatically.
     </p>
   </section>
 </main>
@@ -147,7 +333,36 @@ nav button{flex:1}.stats{gap:15px}.stat span{font-size:21px}
   Games stop progressing while hidden. No offline earnings.
 </footer>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import {
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  onAuthStateChanged, signOut, sendPasswordResetEmail, updateProfile
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, collection, query, orderBy,
+  limit, getDocs, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCLDF3NkhA1NtC3VfbVn21pXj0Rtf_Kuh4",
+  authDomain: "blockthis-5044d.firebaseapp.com",
+  projectId: "blockthis-5044d",
+  storageBucket: "blockthis-5044d.firebasestorage.app",
+  messagingSenderId: "92901086507",
+  appId: "1:92901086507:web:48764a21e48cc5f6faa16e",
+  measurementId: "G-FQ863ZGLWD"
+};
+
+const firebaseApp=initializeApp(firebaseConfig);
+const auth=getAuth(firebaseApp);
+const db=getFirestore(firebaseApp);
+let activeUser=null;
+let publicUsername="";
+let cloudSaveTimer=null;
+let lastLeaderboardBest=-1;
+let isRegistering=false;
+
 (() => {
 "use strict";
 
@@ -434,6 +649,7 @@ function crash(reason){
 
   save("chill-combined-snow-best",best);
   $("best").textContent=best;
+  queueCloudSave();
 
   updateSnowHud();
 
@@ -1358,20 +1574,27 @@ const idleCanvas=$("idleCanvas");
 const ic=idleCanvas.getContext("2d");
 const IW=960,IH=540;
 const stored=read("chill-combined-idle",{})||{};
+const storedIdle=stored.idle||stored;
 
 let idle={
-  coins:Math.max(0,Number(stored.coins)||0),
-  level:Math.max(1,Math.floor(Number(stored.level)||1)),
-  count:clamp(Math.floor(Number(stored.count)||1),1,40),
-  power:Math.max(1,Math.floor(Number(stored.power)||1)),
-  speed:clamp(Math.floor(Number(stored.speed)||1),1,12)
+  coins:Math.max(0,Number(storedIdle.coins)||0),
+  level:Math.max(1,Math.floor(Number(storedIdle.level)||1)),
+  count:clamp(Math.floor(Number(storedIdle.count)||1),1,40),
+  power:Math.max(1,Math.floor(Number(storedIdle.power)||1)),
+  speed:clamp(Math.floor(Number(storedIdle.speed)||1),1,12)
 };
 
 let balls=[],bricks=[],particles=[];
 let idlePaused=false,saveTimer=0;
 
 function persistIdle(){
-  save("chill-combined-idle",idle);
+  const progress={
+    idle:{...idle},
+    balls:balls.map(ball=>({...ball})),
+    bricks:bricks.map(brick=>({...brick}))
+  };
+  save("chill-combined-idle",progress);
+  queueCloudSave();
 }
 
 function makeBall(){
@@ -1709,8 +1932,18 @@ $("idleTab").onclick=()=>switchGame("idle");
 resetSnow();
 resizeSnow();
 
-balls=Array.from({length:idle.count},makeBall);
-makeLevel();
+balls=Array.isArray(stored.balls)&&stored.balls.length===idle.count?
+  stored.balls.map(ball=>({x:Number(ball.x)||IW/2,y:Number(ball.y)||IH-60,vx:Number(ball.vx)||1,vy:Number(ball.vy)||-1})):
+  Array.from({length:idle.count},makeBall);
+if(Array.isArray(stored.bricks)&&stored.bricks.length===40){
+  bricks=stored.bricks.map((brick,index)=>({
+    x:Number(brick.x)||30+(index%10)*91,
+    y:Number(brick.y)||48+Math.floor(index/10)*57,
+    w:Number(brick.w)||81,h:Number(brick.h)||45,
+    hp:Math.max(0,Number(brick.hp)||0),
+    max:Math.max(1,Number(brick.max)||1),hue:Number(brick.hue)||175
+  }));
+}else makeLevel();
 updateShop();
 
 addEventListener("pagehide",persistIdle);
@@ -1735,6 +1968,202 @@ function frame(now){
 }
 
 requestAnimationFrame(frame);
+
+// ACCOUNT, CLOUD SAVES, AND PUBLIC LEADERBOARD
+function showAuthError(message){
+  $("authError").textContent=message||"";
+}
+
+function setAuthMode(registering){
+  isRegistering=registering;
+  $("authTitle").textContent=registering?"Create your account":"Sign in to BlockThis";
+  $("authDescription").textContent=registering?
+    "Create an account to save your games and appear on the leaderboard.":
+    "Use your account to play and keep your progress saved across devices.";
+  $("usernameField").hidden=!registering;
+  $("authUsername").required=registering;
+  $("authPassword").autocomplete=registering?"new-password":"current-password";
+  $("authSubmit").textContent=registering?"Create account":"Sign in";
+  $("authToggle").textContent=registering?"Already have an account? Sign in":"Create an account";
+  $("forgotPassword").hidden=registering;
+  showAuthError("");
+}
+
+function friendlyAuthError(error){
+  const messages={
+    "auth/email-already-in-use":"That email already has an account. Please sign in.",
+    "auth/invalid-email":"Please enter a valid email address.",
+    "auth/weak-password":"Your password must be at least 6 characters.",
+    "auth/invalid-credential":"Email or password is incorrect.",
+    "auth/too-many-requests":"Too many attempts. Please wait a little and try again.",
+    "auth/network-request-failed":"Network error. Check your internet connection."
+  };
+  return messages[error.code]||error.message||"Something went wrong. Please try again.";
+}
+
+$("authToggle").onclick=()=>setAuthMode(!isRegistering);
+
+$("authForm").addEventListener("submit",async event=>{
+  event.preventDefault();
+  showAuthError("");
+  const email=$("authEmail").value.trim();
+  const password=$("authPassword").value;
+  const username=$("authUsername").value.trim();
+  if(isRegistering&&(!username||username.length<3)){
+    showAuthError("Choose a username with at least 3 characters.");return;
+  }
+  if(isRegistering&&username.length>20){
+    showAuthError("Your username must be 20 characters or fewer.");return;
+  }
+  $("authSubmit").disabled=true;
+  try{
+    if(isRegistering){
+      const credential=await createUserWithEmailAndPassword(auth,email,password);
+      await updateProfile(credential.user,{displayName:username});
+      await setDoc(doc(db,"users",credential.user.uid),{
+        username, idle:{coins:0,level:1,count:1,power:1,speed:1},
+        balls:[],bricks:[],snowBest:0,createdAt:serverTimestamp()
+      });
+      await setDoc(doc(db,"leaderboard",credential.user.uid),{
+        username,snowBest:0,idleLevel:1,idleCoins:0,updatedAt:serverTimestamp()
+      });
+      publicUsername=username;
+    }else{
+      await signInWithEmailAndPassword(auth,email,password);
+    }
+  }catch(error){showAuthError(friendlyAuthError(error));}
+  finally{$("authSubmit").disabled=false;}
+});
+
+$("forgotPassword").onclick=async()=>{
+  const email=$("authEmail").value.trim();
+  if(!email){showAuthError("Enter your email address first.");return;}
+  try{
+    await sendPasswordResetEmail(auth,email);
+    showAuthError("Password reset email sent. Check your inbox.");
+  }catch(error){showAuthError(friendlyAuthError(error));}
+};
+
+$("signOut").onclick=()=>signOut(auth);
+
+async function loadLeaderboard(){
+  const list=$("leaderboardList");
+  try{
+    const leaderboardQuery=query(collection(db,"leaderboard"),orderBy("snowBest","desc"),limit(10));
+    const snapshot=await getDocs(leaderboardQuery);
+    list.replaceChildren();
+    if(snapshot.empty){
+      const li=document.createElement("li");li.textContent="No scores yet. Be the first to set a record!";list.append(li);return;
+    }
+    snapshot.forEach(entry=>{
+      const data=entry.data();
+      const li=document.createElement("li");
+      const name=document.createElement("strong");name.textContent=data.username||"Player";
+      const score=document.createElement("small");score.textContent=` — ${Math.max(0,Number(data.snowBest)||0).toLocaleString()} points`;
+      li.append(name,score);list.append(li);
+    });
+  }catch(error){
+    list.replaceChildren();const li=document.createElement("li");
+    li.textContent="Leaderboard unavailable. Check your Firestore setup.";list.append(li);
+    console.error("Leaderboard error:",error);
+  }
+}
+
+function queueCloudSave(){
+  if(!activeUser)return;
+  clearTimeout(cloudSaveTimer);
+  cloudSaveTimer=setTimeout(saveCloudProgress,900);
+}
+
+async function saveCloudProgress(){
+  if(!activeUser)return;
+  const uid=activeUser.uid;
+  const username=publicUsername||activeUser.displayName||"Player";
+  const idleData={...idle};
+  const ballsData=balls.map(ball=>({...ball}));
+  const bricksData=bricks.map(brick=>({...brick}));
+  const bestScore=Math.max(0,Number(best)||0);
+  try{
+    await Promise.all([
+      setDoc(doc(db,"users",uid),{
+        username,idle:idleData,balls:ballsData,bricks:bricksData,
+        snowBest:bestScore,updatedAt:serverTimestamp()
+      },{merge:true}),
+      setDoc(doc(db,"leaderboard",uid),{
+        username,snowBest:bestScore,idleLevel:idle.level,
+        idleCoins:Math.floor(idle.coins),updatedAt:serverTimestamp()
+      },{merge:true})
+    ]);
+    if(bestScore!==lastLeaderboardBest){
+      lastLeaderboardBest=bestScore;
+      await loadLeaderboard();
+    }
+    $("accountStatus").textContent="· Progress saved";
+  }catch(error){
+    $("accountStatus").textContent="· Save failed";
+    console.error("Cloud save failed:",error);
+  }
+}
+
+async function restoreCloudProgress(user){
+  const snapshot=await getDoc(doc(db,"users",user.uid));
+  if(!snapshot.exists()){
+    publicUsername=user.displayName||"Player";
+    await saveCloudProgress();
+    return;
+  }
+  const data=snapshot.data();
+  publicUsername=data.username||user.displayName||"Player";
+  best=Math.max(0,Number(data.snowBest)||0);
+  $("best").textContent=best;
+  if(data.idle&&typeof data.idle==="object"){
+    idle={
+      coins:Math.max(0,Number(data.idle.coins)||0),
+      level:Math.max(1,Math.floor(Number(data.idle.level)||1)),
+      count:clamp(Math.floor(Number(data.idle.count)||1),1,40),
+      power:Math.max(1,Math.floor(Number(data.idle.power)||1)),
+      speed:clamp(Math.floor(Number(data.idle.speed)||1),1,12)
+    };
+  }
+  balls=Array.isArray(data.balls)&&data.balls.length===idle.count?
+    data.balls.map(ball=>({x:Number(ball.x)||IW/2,y:Number(ball.y)||IH-60,vx:Number(ball.vx)||1,vy:Number(ball.vy)||-1})):
+    Array.from({length:idle.count},makeBall);
+  if(Array.isArray(data.bricks)&&data.bricks.length===40){
+    bricks=data.bricks.map((brick,index)=>({
+      x:Number(brick.x)||30+(index%10)*91,
+      y:Number(brick.y)||48+Math.floor(index/10)*57,
+      w:Number(brick.w)||81,h:Number(brick.h)||45,
+      hp:Math.max(0,Number(brick.hp)||0),max:Math.max(1,Number(brick.max)||1),
+      hue:Number(brick.hue)||175
+    }));
+  }else makeLevel();
+  save("chill-combined-idle",{idle:{...idle},balls,bricks});
+  save("chill-combined-snow-best",best);
+  updateShop();
+  await loadLeaderboard();
+  lastLeaderboardBest=best;
+}
+
+onAuthStateChanged(auth,async user=>{
+  activeUser=user;
+  if(!user){
+    publicUsername="";
+    $("authScreen").hidden=false;
+    $("gameArea").hidden=true;
+    return;
+  }
+  $("authScreen").hidden=true;
+  $("gameArea").hidden=false;
+  $("currentUsername").textContent=user.displayName||"Player";
+  try{
+    await restoreCloudProgress(user);
+    $("currentUsername").textContent=publicUsername;
+  }catch(error){
+    $("accountStatus").textContent="· Could not load cloud data";
+    console.error("Account load failed:",error);
+  }
+});
+
 })();
 </script>
 </body>
