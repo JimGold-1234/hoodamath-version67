@@ -929,25 +929,13 @@ function renderIncomingRequests() {
 async function respondToRequest(request, status) {
   if (!currentUser || request.recipientId !== currentUser.uid) return;
 
+  if (!["accepted", "rejected"].includes(status)) return;
+
   try {
-    const theirBlock = await getDoc(
-      doc(db, "users", currentUser.uid, "blocks", request.senderId)
-    );
-
-    const theirBlockCheck = await getDoc(
-      doc(db, "users", request.senderId, "blocks", currentUser.uid)
-    );
-
-    if (status === "accepted" &&
-        (theirBlock.exists() || theirBlockCheck.exists())) {
-      showError("You cannot accept a request while either user has blocked the other.");
-      return;
-    }
-
     const batch = writeBatch(db);
     const requestRef = doc(db, "messageRequests", request.id);
 
-    batch.update(requestRef, {status});
+    batch.update(requestRef, { status });
 
     if (status === "accepted") {
       const members = [request.senderId, request.recipientId].sort();
@@ -970,12 +958,20 @@ async function respondToRequest(request, status) {
       await openConversation(members.join("_"));
     }
 
+    alert(
+      status === "accepted"
+        ? "Message request accepted!"
+        : "Message request rejected!"
+    );
+
   } catch (error) {
-    console.error(error);
+    console.error("RESPOND REQUEST ERROR:", error);
+    console.error("Error code:", error.code);
+    console.error("Error message:", error.message);
+
     showError("Could not process request: " + friendlyError(error));
   }
 }
-
 
 // BLOCK AND UNBLOCK USERS
 
