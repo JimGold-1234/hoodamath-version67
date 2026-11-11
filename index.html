@@ -689,23 +689,28 @@ async function sendMessageRequest(user) {
   }
 }
 
+
 function loadIncomingRequests() {
+  if (!currentUser) return;
+
   const q = query(
     collection(db, "messageRequests"),
     where("recipientId", "==", currentUser.uid)
   );
 
   requestsUnsubscribe = onSnapshot(q, snapshot => {
+    console.log("Incoming requests found:", snapshot.size);
+
     incomingRequests = snapshot.docs
-      .map(item => ({id:item.id,...item.data()}))
-      .filter(request =>
-        request.status === "pending" &&
-        !blockedUsers.has(request.senderId)
-      );
+      .map(item => ({ id: item.id, ...item.data() }))
+      .filter(request => request.status === "pending");
+
     renderIncomingRequests();
+
   }, error => {
-    console.error(error);
-    $("requestList").textContent = "Could not load requests.";
+    console.error("Incoming request loading error:", error);
+    $("requestList").textContent =
+      "Could not load requests: " + error.message;
   });
 }
 
