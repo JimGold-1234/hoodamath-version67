@@ -2046,21 +2046,49 @@ function developerAccountSelected() {
 }
 
 async function verifyDeveloperSession() {
-  if (!developerAccountSelected()) {
-    throw new Error("You are not authorized to use this panel.");
-  }
+  const user = auth.currentUser;
 
-  await currentUser.reload();
-
-  if (!currentUser.emailVerified) {
+  if (
+    !user ||
+    user.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()
+  ) {
     throw new Error(
-      "Verify your developer email address before using this panel."
+      "Sign in with your developer account first."
     );
   }
 
-  await currentUser.getIdToken(true);
-}
+  await user.reload();
 
+  if (auth.currentUser?.uid !== user.uid) {
+    throw new Error(
+      "Your signed-in account changed. Please try again."
+    );
+  }
+
+  if (!user.emailVerified) {
+    const shouldSend = confirm(
+      "Your developer email has not been verified.\n\n" +
+      "Send a verification email to " + user.email + "?"
+    );
+
+    if (shouldSend) {
+      await sendEmailVerification(user);
+
+      throw new Error(
+        "Verification email sent. Open your inbox, click the " +
+        "verification link, then return here and unlock the panel again. " +
+        "Check Spam if you do not see the email."
+      );
+    }
+
+    throw new Error(
+      "Email verification is required to use the developer panel."
+    );
+  }
+
+  await user.getIdToken(true);
+}
+  
 function getAdminResults() {
   return $("adminResults");
 }
