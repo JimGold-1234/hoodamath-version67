@@ -103,6 +103,7 @@ async function addSystemMessage(conversationRef, text) {
 // MESSAGE REQUESTS
 // ------------------------------
 
+
 exports.acceptMessageRequest = onCall(async (request) => {
   const uid = requireSignedIn(request);
 
@@ -123,6 +124,7 @@ exports.acceptMessageRequest = onCall(async (request) => {
   const requestRef = db.collection("messageRequests").doc(requestId);
 
   return db.runTransaction(async (transaction) => {
+    // Read the message request first.
     const requestSnapshot = await transaction.get(requestRef);
 
     if (!requestSnapshot.exists) {
@@ -145,13 +147,13 @@ exports.acceptMessageRequest = onCall(async (request) => {
       );
     }
 
-    transaction.update(requestRef, {
-      status,
-      respondedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-
     if (status === "rejected") {
-      return { success: true, status };
+      transaction.update(requestRef, {
+        status: "rejected",
+        respondedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      return { success: true, status: "rejected" };
     }
 
     const senderId = requestData.senderId;
@@ -159,43 +161,59 @@ exports.acceptMessageRequest = onCall(async (request) => {
     if (!senderId || senderId === uid) {
       throw new HttpsError(
         "failed-precondition",
-        "The message request contains invalid user information."
+        "Invalid sender information."
       );
     }
 
     const members = [senderId, uid].sort();
     const conversationId = members.join("_");
+
     const conversationRef = db
       .collection("conversations")
       .doc(conversationId);
 
+    // IMPORTANT: Complete all reads before making writes.
     const conversationSnapshot = await transaction.get(conversationRef);
 
-    const conversationData = {
+    if (
+      conversationSnapshot.exists &&
+      conversationSnapshot.data().isGroup === true
+    ) {
+      throw new HttpsError(
+        "failed-precondition",
+        "A group conversation already uses this ID."
+      );
+    }
+
+    const existingData = conversationSnapshot.exists
+      ? conversationSnapshot.data()
+      : {};
+
+    // Now perform the writes.
+    transaction.update(requestRef, {
+      status: "accepted",
+      respondedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    transaction.set(conversationRef, {
       members,
       activeMembers: members,
       isGroup: false,
-      createdAt: conversationSnapshot.exists
-        ? conversationSnapshot.data().createdAt
-        : admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: existingData.createdAt ||
+        admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      lastMessage: conversationSnapshot.exists
-        ? conversationSnapshot.data().lastMessage || ""
-        : "",
-      lastSenderId: conversationSnapshot.exists
-        ? conversationSnapshot.data().lastSenderId || ""
-        : ""
-    };
-
-    transaction.set(conversationRef, conversationData, { merge: true });
+      lastMessage: existingData.lastMessage || "",
+      lastSenderId: existingData.lastSenderId || ""
+    }, { merge: true });
 
     return {
       success: true,
-      status,
+      status: "accepted",
       conversationId
     };
   });
 });
+
 
 // ------------------------------
 // LEAVING CONVERSATIONS
