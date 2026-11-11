@@ -484,6 +484,18 @@ import {
   deleteDoc, addDoc, query, where, orderBy, onSnapshot,
   serverTimestamp, writeBatch, runTransaction, limit
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+  import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signOut,
+  onAuthStateChanged,
+  sendEmailVerification,
+  EmailAuthProvider,
+  reauthenticateWithCredential
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
   
 import {
   getFunctions, httpsCallable
