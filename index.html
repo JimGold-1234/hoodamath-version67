@@ -2029,18 +2029,77 @@ function escapeHtml(value) {
   })[char]);
 }
 
-// DEVELOPER PANEL
-document.addEventListener("keydown", event => {
-  const isShortcut =
-    event.shiftKey &&
-    (event.code === "Equal" || event.key === "+" || event.key === "=");
+// DEVELOPER PANEL — FIRESTORE ONLY
 
-  if (!isShortcut || event.repeat) return;
+const ADMIN_PAGE_SIZE = 100;
 
-  if (!currentUser ||
-      currentUser.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-    return;
+function developerAccountSelected() {
+  return currentUser &&
+    currentUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+}
+
+async function verifyDeveloperSession() {
+  if (!developerAccountSelected()) {
+    throw new Error("You are not authorized to use this panel.");
   }
+
+  await currentUser.reload();
+
+  if (!currentUser.emailVerified) {
+    throw new Error(
+      "Verify your developer email address before using this panel."
+    );
+  }
+
+  await currentUser.getIdToken(true);
+}
+
+function getAdminResults() {
+  return $("adminResults");
+}
+
+function showAdminFailure(error) {
+  console.error("Developer panel error:", error);
+
+  const results = getAdminResults();
+
+  if (results) {
+    results.textContent = "Error: " + friendlyError(error);
+  }
+}
+
+function makeAdminRow(title, details = []) {
+  const row = document.createElement("div");
+  row.className = "admin-row";
+
+  const info = document.createElement("div");
+
+  const heading = document.createElement("strong");
+  heading.textContent = title;
+  info.append(heading);
+
+  details.forEach(text => {
+    const detail = document.createElement("small");
+    detail.textContent = text;
+    info.append(detail);
+  });
+
+  row.append(info);
+  return row;
+}
+
+document.addEventListener("keydown", event => {
+  const isShortcut = event.shiftKey && (
+    event.code === "Equal" ||
+    event.key === "+" ||
+    event.key === "="
+  );
+
+  const editing = event.target instanceof Element &&
+    event.target.closest("input, textarea, [contenteditable='true']");
+
+  if (!isShortcut || event.repeat || editing) return;
+  if (!developerAccountSelected()) return;
 
   event.preventDefault();
 
@@ -2052,290 +2111,337 @@ document.addEventListener("keydown", event => {
 });
 
 async function openDeveloperPanel() {
-  if (!currentUser ||
-      currentUser.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-    showError("You are not authorized.");
+  try {
+    await verifyDeveloperSession();
+  } catch (error) {
+    showError(friendlyError(error));
     return;
   }
+
+  if (!developerAccountSelected()) return;
 
   adminPanelOpen = true;
 
   showModal(`
     <h2>iCom Developer Panel</h2>
-    <p style="color:var(--muted)">Administrative tools</p>
+
+    <p style="color:var(--muted)">
+      Firestore administration. Lists show up to
+      ${ADMIN_PAGE_SIZE} records at a time.
+    </p>
+
     <div class="modal-actions">
-      <button class="secondary-btn" id="adminUsers">View All Users</button>
-      <button class="secondary-btn" id="adminConversations">View All Conversations</button>
-      <button class="secondary-btn" id="adminDeleteConversation">Delete Conversation</button>
-      <button class="danger-btn" id="adminVoidRequests">Void All Message Requests</button>
-      <button class="danger-btn" id="adminReset">Reset All Data</button>
+      <button class="secondary-btn" id="adminUsers">
+        View User Profiles
+      </button>
+
+      <button class="secondary-btn" id="adminConversations">
+        View Conversations
+      </button>
+
+      <button class="danger-btn" id="adminVoidRequests">
+        Clear Message Requests
+      </button>
     </div>
-    <div id="adminResults" class="admin-list" style="margin-top:15px"></div>
+
+    <p class="notice">
+      Account suspension, session revocation, full resets,
+      and whole-conversation deletion are not available here.
+    </p>
+
+    <div
+      id="adminResults"
+      class="admin-list"
+      style="margin-top:15px"
+    >
+      Select a tool above.
+    </div>
   `);
 
   $("adminUsers").onclick = adminViewUsers;
   $("adminConversations").onclick = adminViewConversations;
-  $("adminDeleteConversation").onclick = adminDeleteConversationPrompt;
   $("adminVoidRequests").onclick = adminVoidAllMessageRequests;
-  $("adminReset").onclick = adminResetAllData;
 }
-
-
-async function adminVoidAllMessageRequests() {
-  if (!currentUser ||
-      currentUser.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-    showError("You are not authorized.");
-    return;
-  }
-
-  if (!confirm(
-    "Void every message request? This will clear all incoming and outgoing requests for everyone."
-  )) {
-    return;
-  }
-
-  const button = $("adminVoidRequests");
-  if (button) button.disabled = true;
-
-  try {
-    // Refresh authentication and verify the developer account.
-    await currentUser.reload();
-
-    if (!currentUser.emailVerified) {
-      throw new Error("Your developer email must be verified.");
-    }
-
-    await currentUser.getIdToken(true);
-
-    // Retrieve all message requests.
-    const snapshot = await getDocs(
-      collection(db, "messageRequests")
-    );
-
-    const documents = snapshot.docs;
-    let deletedCount = 0;
-
-    // Firestore batches support up to 500 operations.
-    for (let i = 0; i < documents.length; i += 500) {
-      const batch = writeBatch(db);
-
-      const currentBatch = documents.slice(i, i + 500);
-
-      currentBatch.forEach(requestDoc => {
-        batch.delete(requestDoc.ref);
-      });
-
-      await batch.commit();
-
-      deletedCount += currentBatch.length;
-    }
-
-    alert(
-      `Successfully voided ${deletedCount} message requests.`
-    );
-
-    $("adminResults").textContent =
-      `Completed. ${deletedCount} message requests were removed.`;
-
-  } catch (error) {
-    console.error("Admin void requests error:", error);
-
-    showError(
-      "Could not void message requests: " + friendlyError(error)
-    );
-
-  } finally {
-    if (button) button.disabled = false;
-  }
-}
-
 
 async function adminViewUsers() {
-  const results = $("adminResults");
-  results.textContent = "Loading users...";
+  const results = getAdminResults();
+  if (!results) return;
+
+  results.textContent = "Loading public user profiles...";
 
   try {
-    const data = await callFunction("adminListUsers");
+    await verifyDeveloperSession();
+
+    const snapshot = await getDocs(
+      query(
+        collection(db, "users"),
+        orderBy("usernameLower"),
+        limit(ADMIN_PAGE_SIZE)
+      )
+    );
+
+    if (getAdminResults() !== results) return;
+
     results.replaceChildren();
 
-    (data.users || []).forEach(user => {
-      const row = document.createElement("div");
-      row.className = "admin-row";
+    if (snapshot.empty) {
+      results.textContent = "No user profiles found.";
+      return;
+    }
 
-      const info = document.createElement("div");
+    snapshot.docs.forEach(profile => {
+      const data = profile.data();
 
-      info.innerHTML =
-        `<strong>${escapeHtml(user.username || "No username")}</strong>` +
-        `<small>${escapeHtml(user.email || "No email")}</small>` +
-        `<small>UserID: ${escapeHtml(user.uid)}</small>`;
-
-      const actions = document.createElement("div");
-
-      const disable = document.createElement("button");
-      disable.className = "secondary-btn";
-      disable.textContent = user.disabled ? "Re-enable" : "Suspend";
-
-      disable.onclick = async () => {
-        const disabled = !user.disabled;
-
-        if (!confirm((disabled ? "Suspend " : "Re-enable ") + user.email + "?")) return;
-
-        try {
-          await callFunction("adminSetUserDisabled", {
-            uid:user.uid,
-            disabled
-          });
-
-          adminViewUsers();
-        } catch (error) {
-          showError(friendlyError(error));
-        }
-      };
-
-      const logout = document.createElement("button");
-      logout.className = "secondary-btn";
-      logout.textContent = "Log out";
-
-      logout.onclick = async () => {
-        if (!confirm("Revoke this user's sessions?")) return;
-
-        try {
-          await callFunction("adminRevokeUserSessions", {uid:user.uid});
-          alert("User sessions have been revoked.");
-        } catch (error) {
-          showError(friendlyError(error));
-        }
-      };
-
-      actions.append(disable, logout);
-      row.append(info, actions);
-      results.append(row);
+      results.append(
+        makeAdminRow(
+          data.username || "Unnamed user",
+          ["User ID: " + profile.id]
+        )
+      );
     });
+
+    const note = document.createElement("p");
+    note.className = "notice";
+    note.textContent =
+      `Showing up to ${ADMIN_PAGE_SIZE} public profiles. ` +
+      "Private emails and Authentication account controls are not shown.";
+
+    results.append(note);
   } catch (error) {
-    results.textContent = "Could not load users: " + friendlyError(error);
+    if (getAdminResults() === results) {
+      showAdminFailure(error);
+    }
   }
 }
 
 async function adminViewConversations() {
-  const results = $("adminResults");
+  const results = getAdminResults();
+  if (!results) return;
+
   results.textContent = "Loading conversations...";
 
   try {
-    const data = await callFunction("adminListConversations");
+    await verifyDeveloperSession();
+
+    const snapshot = await getDocs(
+      query(
+        collection(db, "conversations"),
+        limit(ADMIN_PAGE_SIZE)
+      )
+    );
+
+    if (getAdminResults() !== results) return;
+
     results.replaceChildren();
 
-    (data.conversations || []).forEach(conversation => {
-      const row = document.createElement("div");
-      row.className = "admin-row";
+    if (snapshot.empty) {
+      results.textContent = "No conversations found.";
+      return;
+    }
 
-      const info = document.createElement("div");
+    snapshot.docs.forEach(conversation => {
+      const data = conversation.data();
 
-      info.innerHTML =
-        `<strong>${escapeHtml(conversation.name || "Private conversation")}</strong>` +
-        `<small>ConversationID: ${escapeHtml(conversation.id)}</small>` +
-        `<small>Members: ${(conversation.members || []).length}</small>`;
+      const row = makeAdminRow(
+        data.isGroup
+          ? data.name || "Unnamed group"
+          : "Private conversation",
+        [
+          "Conversation ID: " + conversation.id,
+          "Members: " + (data.members || []).length
+        ]
+      );
 
       const view = document.createElement("button");
       view.className = "secondary-btn";
-      view.textContent = "View";
+      view.textContent = "View Messages";
       view.onclick = () => adminViewConversation(conversation.id);
 
-      row.append(info, view);
+      row.append(view);
       results.append(row);
     });
+
+    const note = document.createElement("p");
+    note.className = "notice";
+    note.textContent =
+      `Showing up to ${ADMIN_PAGE_SIZE} conversations.`;
+
+    results.append(note);
   } catch (error) {
-    results.textContent = "Could not load conversations: " + friendlyError(error);
+    if (getAdminResults() === results) {
+      showAdminFailure(error);
+    }
   }
 }
 
 async function adminViewConversation(conversationId) {
-  const results = $("adminResults");
+  const results = getAdminResults();
+  if (!results) return;
+
   results.textContent = "Loading messages...";
 
   try {
-    const data = await callFunction("adminGetConversation", {conversationId});
+    await verifyDeveloperSession();
+
+    const snapshot = await getDocs(
+      query(
+        collection(db, "conversations", conversationId, "messages"),
+        orderBy("createdAt", "desc"),
+        limit(ADMIN_PAGE_SIZE)
+      )
+    );
+
+    if (getAdminResults() !== results) return;
+
     results.replaceChildren();
 
+    const back = document.createElement("button");
+    back.className = "secondary-btn";
+    back.textContent = "Back to Conversations";
+    back.onclick = adminViewConversations;
+    results.append(back);
+
     const heading = document.createElement("h3");
-    heading.textContent = "Conversation " + conversationId;
+    heading.textContent = "Conversation: " + conversationId;
     results.append(heading);
 
-    (data.messages || []).forEach(message => {
-      const row = document.createElement("div");
-      row.className = "admin-row";
+    const note = document.createElement("p");
+    note.className = "notice";
+    note.textContent =
+      `Latest ${ADMIN_PAGE_SIZE} messages maximum, newest first.`;
+    results.append(note);
 
-      const info = document.createElement("div");
-      info.textContent = message.text || "[Unsent message]";
+    if (snapshot.empty) {
+      const empty = document.createElement("p");
+      empty.textContent = "No messages found.";
+      results.append(empty);
+      return;
+    }
 
-      const small = document.createElement("small");
-      small.textContent = "Message ID: " + message.id + " | Sender: " + message.senderId;
-      info.append(small);
+    snapshot.docs.forEach(messageSnapshot => {
+      const message = messageSnapshot.data();
+
+      const row = makeAdminRow(
+        message.unsent
+          ? "Unsent message"
+          : message.text || "Empty message",
+        [
+          "Message ID: " + messageSnapshot.id,
+          "Sender: " + (message.senderId || "Unknown")
+        ]
+      );
 
       const remove = document.createElement("button");
       remove.className = "danger-btn";
       remove.textContent = "Delete";
 
       remove.onclick = async () => {
-        if (!confirm("Permanently delete this message?")) return;
+        if (!confirm(
+          "Permanently delete this message for everyone?\n\n" +
+          "Conversation: " + conversationId + "\n" +
+          "Message: " + messageSnapshot.id + "\n\n" +
+          "This cannot be undone."
+        )) {
+          return;
+        }
+
+        remove.disabled = true;
 
         try {
-          await callFunction("adminDeleteMessage", {
-            conversationId,
-            messageId:message.id
-          });
+          await verifyDeveloperSession();
 
-          adminViewConversation(conversationId);
+          await deleteDoc(
+            doc(
+              db,
+              "conversations",
+              conversationId,
+              "messages",
+              messageSnapshot.id
+            )
+          );
+
+          await adminViewConversation(conversationId);
         } catch (error) {
+          console.error("Admin message deletion failed:", error);
           showError(friendlyError(error));
+          remove.disabled = false;
         }
       };
 
-      row.append(info, remove);
+      row.append(remove);
       results.append(row);
     });
   } catch (error) {
-    results.textContent = "Could not view conversation: " + friendlyError(error);
+    if (getAdminResults() === results) {
+      showAdminFailure(error);
+    }
   }
 }
 
-async function adminDeleteConversationPrompt() {
-  const conversationId = prompt("Enter the Conversation ID:");
-
-  if (!conversationId) return;
-  if (!confirm("Permanently delete this conversation and its messages?")) return;
-
-  try {
-    await callFunction("adminDeleteConversation", {conversationId});
-    alert("Conversation deleted.");
-    adminViewConversations();
-  } catch (error) {
-    showError("Could not delete conversation: " + friendlyError(error));
-  }
-}
-
-async function adminResetAllData() {
-  if (!confirm("RESET ALL DATA? This deletes conversations, requests, blocks, and related data.")) return;
-  if (!confirm("FINAL CONFIRMATION: This action cannot be undone. Continue?")) return;
-
-  const confirmation = prompt('Type RESET ALL DATA to confirm:');
-
-  if (confirmation !== "RESET ALL DATA") {
-    showError("Reset cancelled. Confirmation did not match.");
+async function adminVoidAllMessageRequests() {
+  if (!confirm(
+    "Delete ALL current message requests for everyone?\n\n" +
+    "This includes pending, accepted, and rejected request records. " +
+    "Existing conversations and messages will remain.\n\n" +
+    "This cannot be undone."
+  )) {
     return;
   }
 
+  const button = $("adminVoidRequests");
+  const results = getAdminResults();
+
+  if (button) button.disabled = true;
+
+  let deletedCount = 0;
+
   try {
-    await callFunction("adminResetAllData", {
-      confirmation:"RESET ALL DATA"
+    await verifyDeveloperSession();
+
+    // Capture a bounded set first, rather than looping forever
+    // if users keep creating new requests.
+    const snapshot = await getDocs(
+      query(
+        collection(db, "messageRequests"),
+        limit(400)
+      )
+    );
+
+    if (snapshot.empty) {
+      if (results && getAdminResults() === results) {
+        results.textContent = "No message requests found.";
+      }
+      return;
+    }
+
+    const batch = writeBatch(db);
+
+    snapshot.docs.forEach(requestDoc => {
+      batch.delete(requestDoc.ref);
     });
 
-    alert("The data reset was completed. You will be signed out.");
-    await signOut(auth);
+    await batch.commit();
+    deletedCount = snapshot.size;
+
+    if (results && getAdminResults() === results) {
+      results.textContent =
+        `Deleted ${deletedCount} message request records. ` +
+        (deletedCount === 400
+          ? "This tool deletes at most 400 per operation. " +
+            "Run it again if more requests remain."
+          : "Existing conversations and messages were not deleted.");
+    }
   } catch (error) {
-    showError("Could not reset data: " + friendlyError(error));
+    console.error("Admin request deletion failed:", error);
+
+    showError(
+      "Could not clear message requests: " + friendlyError(error)
+    );
+  } finally {
+    if (button) button.disabled = false;
   }
 }
-
+  
 // MOBILE BACK
 $("mobileBack").onclick = () => {
   $("app").classList.remove("show-chat");
