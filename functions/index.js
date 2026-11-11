@@ -1,5 +1,5 @@
-
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
@@ -8,16 +8,12 @@ const db = admin.firestore();
 const auth = admin.auth();
 
 const DEVELOPER_EMAIL = "jimgoldbloomyt@gmail.com";
-
-// ------------------------------
-// AUTHORIZATION
-// ------------------------------
+const REQUEST_EXPIRY_MS = 3 * 60 * 60 * 1000;
 
 function requireSignedIn(request) {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "You must be signed in.");
   }
-
   return request.auth.uid;
 }
 
@@ -26,31 +22,17 @@ function requireDeveloper(request) {
   const email = request.auth.token.email;
   const emailVerified = request.auth.token.email_verified === true;
 
-  if (
-    email !== DEVELOPER_EMAIL ||
-    !emailVerified
-  ) {
-    throw new HttpsError(
-      "permission-denied",
-      "You are not authorized to use this developer function."
-    );
+  if (email?.toLowerCase() !== DEVELOPER_EMAIL.toLowerCase() || !emailVerified) {
+    throw new HttpsError("permission-denied", "You are not authorized.");
   }
 
   return uid;
 }
 
 function requireString(value, field, maxLength = 200) {
-  if (
-    typeof value !== "string" ||
-    value.trim().length === 0 ||
-    value.length > maxLength
-  ) {
-    throw new HttpsError(
-      "invalid-argument",
-      `Invalid ${field}.`
-    );
+  if (typeof value !== "string" || !value.trim() || value.length > maxLength) {
+    throw new HttpsError("invalid-argument", `Invalid ${field}.`);
   }
-
   return value.trim();
 }
 
@@ -73,19 +55,14 @@ async function requireGroupOwner(uid, conversationId) {
     conversation.data.isGroup !== true ||
     conversation.data.ownerUid !== uid
   ) {
-    throw new HttpsError(
-      "permission-denied",
-      "Only the group owner can perform this action."
-    );
+    throw new HttpsError("permission-denied", "Only the group owner can do this.");
   }
 
   return conversation;
 }
 
 async function addSystemMessage(conversationRef, text) {
-  const messageRef = conversationRef.collection("messages").doc();
-
-  await messageRef.set({
+  await conversationRef.collection("messages").add({
     senderId: "system",
     text,
     type: "system",
@@ -100,51 +77,82 @@ async function addSystemMessage(conversationRef, text) {
 }
 
 // ------------------------------
+// MESSAGE REQUEST EXPIRATION
+// ------------------------------
+
+// Runs every five minutes. Deletes pending requests that are at least
+// three hours old. Admin SDK operations bypass client Firestore rules.
+exports.expireMessageRequests = onSchedule(
+  {
+    schedule: "every 5 minutes",
+    timeZone: "Etc/UTC",
+    region: "us-central1"
+  },
+  async () => {
+    const cutoff = admin.firestore.Timestamp.fromMillis(
+      Date.now() - REQUEST_EXPIRY_MS
+    );
+
+    const snapshot = await db.collection("messageRequests")
+      .where("status", "==", "pending")
+      .get();
+
+    const expired = snapshot.docs.filter(document => {
+      const createdAt = document.data().createdAt;
+      return createdAt && createdAt.toMillis() <= cutoff.toMillis();
+    });
+
+    for (let i = 0; i < expired.length; i += 500) {
+      const batch = db.batch();
+
+      expired.slice(i, i + 500).forEach(document => {
+        batch.delete(document.ref);
+      });
+
+      await batch.commit();
+    }
+
+    console.log(`Expired ${expired.length} message requests.`);
+  }
+);
+
+// ------------------------------
 // MESSAGE REQUESTS
 // ------------------------------
 
-
-exports.acceptMessageRequest = onCall(async (request) => {
+exports.acceptMessageRequest = onCall(async request => {
   const uid = requireSignedIn(request);
-
-  const requestId = requireString(
-    request.data?.requestId,
-    "request ID"
-  );
-
+  const requestId = requireString(request.data?.requestId, "request ID");
   const status = request.data?.status;
 
   if (!["accepted", "rejected"].includes(status)) {
-    throw new HttpsError(
-      "invalid-argument",
-      "Status must be accepted or rejected."
-    );
+    throw new HttpsError("invalid-argument", "Invalid request status.");
   }
 
   const requestRef = db.collection("messageRequests").doc(requestId);
 
-  return db.runTransaction(async (transaction) => {
-    // Read the message request first.
+  return db.runTransaction(async transaction => {
     const requestSnapshot = await transaction.get(requestRef);
 
     if (!requestSnapshot.exists) {
-      throw new HttpsError("not-found", "Message request not found.");
+      throw new HttpsError("not-found", "This request no longer exists. It may have expired.");
     }
 
     const requestData = requestSnapshot.data();
 
     if (requestData.recipientId !== uid) {
-      throw new HttpsError(
-        "permission-denied",
-        "You cannot respond to this request."
-      );
+      throw new HttpsError("permission-denied", "You cannot respond to this request.");
     }
 
     if (requestData.status !== "pending") {
-      throw new HttpsError(
-        "failed-precondition",
-        "This request has already been handled."
-      );
+      throw new HttpsError("failed-precondition", "This request has already been handled.");
+    }
+
+    const createdAt = requestData.createdAt?.toMillis?.() || 0;
+
+    if (!createdAt || Date.now() - createdAt >= REQUEST_EXPIRY_MS) {
+      transaction.delete(requestRef);
+      return { success: false, expired: true };
     }
 
     if (status === "rejected") {
@@ -159,37 +167,22 @@ exports.acceptMessageRequest = onCall(async (request) => {
     const senderId = requestData.senderId;
 
     if (!senderId || senderId === uid) {
-      throw new HttpsError(
-        "failed-precondition",
-        "Invalid sender information."
-      );
+      throw new HttpsError("failed-precondition", "Invalid sender information.");
     }
 
     const members = [senderId, uid].sort();
     const conversationId = members.join("_");
-
-    const conversationRef = db
-      .collection("conversations")
-      .doc(conversationId);
-
-    // IMPORTANT: Complete all reads before making writes.
+    const conversationRef = db.collection("conversations").doc(conversationId);
     const conversationSnapshot = await transaction.get(conversationRef);
 
-    if (
-      conversationSnapshot.exists &&
-      conversationSnapshot.data().isGroup === true
-    ) {
-      throw new HttpsError(
-        "failed-precondition",
-        "A group conversation already uses this ID."
-      );
+    if (conversationSnapshot.exists && conversationSnapshot.data().isGroup === true) {
+      throw new HttpsError("failed-precondition", "A group conversation already uses this ID.");
     }
 
     const existingData = conversationSnapshot.exists
       ? conversationSnapshot.data()
       : {};
 
-    // Now perform the writes.
     transaction.update(requestRef, {
       status: "accepted",
       respondedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -206,107 +199,89 @@ exports.acceptMessageRequest = onCall(async (request) => {
       lastSenderId: existingData.lastSenderId || ""
     }, { merge: true });
 
-    return {
-      success: true,
-      status: "accepted",
-      conversationId
-    };
+    return { success: true, status: "accepted", conversationId };
   });
 });
 
+// ------------------------------
+// DEVELOPER: VOID ALL REQUESTS
+// ------------------------------
+
+exports.adminVoidAllMessageRequests = onCall(async request => {
+  requireDeveloper(request);
+
+  const snapshot = await db.collection("messageRequests").get();
+
+  for (let i = 0; i < snapshot.docs.length; i += 500) {
+    const batch = db.batch();
+
+    snapshot.docs.slice(i, i + 500).forEach(document => {
+      batch.delete(document.ref);
+    });
+
+    await batch.commit();
+  }
+
+  return {
+    success: true,
+    deletedCount: snapshot.size
+  };
+});
 
 // ------------------------------
 // LEAVING CONVERSATIONS
 // ------------------------------
 
-exports.leavePrivateConversation = onCall(async (request) => {
+exports.leavePrivateConversation = onCall(async request => {
   const uid = requireSignedIn(request);
-
-  const conversationId = requireString(
-    request.data?.conversationId,
-    "conversation ID"
-  );
-
+  const conversationId = requireString(request.data?.conversationId, "conversation ID");
   const { ref, data } = await getConversation(conversationId);
 
   if (data.isGroup === true) {
-    throw new HttpsError(
-      "failed-precondition",
-      "This is a group conversation."
-    );
+    throw new HttpsError("failed-precondition", "This is a group conversation.");
   }
 
   if (!Array.isArray(data.members) || !data.members.includes(uid)) {
-    throw new HttpsError(
-      "permission-denied",
-      "You are not part of this conversation."
-    );
+    throw new HttpsError("permission-denied", "You are not part of this conversation.");
   }
 
-  const activeMembers = Array.isArray(data.activeMembers)
-    ? data.activeMembers
-    : data.members;
+  const activeMembers = Array.isArray(data.activeMembers) ? data.activeMembers : data.members;
 
   if (!activeMembers.includes(uid)) {
-    throw new HttpsError(
-      "failed-precondition",
-      "You have already left this conversation."
-    );
+    throw new HttpsError("failed-precondition", "You have already left this conversation.");
   }
 
-  const remainingMembers = activeMembers.filter(
-    (memberUid) => memberUid !== uid
-  );
-
   await ref.update({
-    activeMembers: remainingMembers,
+    activeMembers: activeMembers.filter(memberUid => memberUid !== uid),
     updatedAt: admin.firestore.FieldValue.serverTimestamp()
   });
 
   return { success: true };
 });
 
-exports.leaveGroupConversation = onCall(async (request) => {
+exports.leaveGroupConversation = onCall(async request => {
   const uid = requireSignedIn(request);
-
-  const conversationId = requireString(
-    request.data?.conversationId,
-    "conversation ID"
-  );
-
+  const conversationId = requireString(request.data?.conversationId, "conversation ID");
   const { ref, data } = await getConversation(conversationId);
 
   if (data.isGroup !== true) {
-    throw new HttpsError(
-      "failed-precondition",
-      "This is not a group conversation."
-    );
+    throw new HttpsError("failed-precondition", "This is not a group conversation.");
   }
 
   if (!Array.isArray(data.members) || !data.members.includes(uid)) {
-    throw new HttpsError(
-      "permission-denied",
-      "You are not a member of this group."
-    );
+    throw new HttpsError("permission-denied", "You are not a member of this group.");
   }
 
   if (data.ownerUid === uid) {
-    throw new HttpsError(
-      "failed-precondition",
-      "Transfer ownership before leaving the group."
-    );
+    throw new HttpsError("failed-precondition", "Transfer ownership before leaving the group.");
   }
 
   await ref.update({
-    members: data.members.filter((memberUid) => memberUid !== uid),
+    members: data.members.filter(memberUid => memberUid !== uid),
     updatedAt: admin.firestore.FieldValue.serverTimestamp()
   });
 
-  await addSystemMessage(
-    ref,
-    "A member left the group."
-  );
-
+  await addSystemMessage(ref, "A member left the group.");
   return { success: true };
 });
 
@@ -314,16 +289,10 @@ exports.leaveGroupConversation = onCall(async (request) => {
 // GROUP MANAGEMENT
 // ------------------------------
 
-exports.renameGroupConversation = onCall(async (request) => {
+exports.renameGroupConversation = onCall(async request => {
   const uid = requireSignedIn(request);
-
-  const conversationId = requireString(
-    request.data?.conversationId,
-    "conversation ID"
-  );
-
+  const conversationId = requireString(request.data?.conversationId, "conversation ID");
   const name = requireString(request.data?.name, "group name", 50);
-
   const { ref } = await requireGroupOwner(uid, conversationId);
 
   await ref.update({
@@ -332,69 +301,40 @@ exports.renameGroupConversation = onCall(async (request) => {
   });
 
   await addSystemMessage(ref, `The group was renamed to ${name}.`);
-
   return { success: true };
 });
 
-exports.kickGroupMember = onCall(async (request) => {
+exports.kickGroupMember = onCall(async request => {
   const uid = requireSignedIn(request);
-
-  const conversationId = requireString(
-    request.data?.conversationId,
-    "conversation ID"
-  );
-
-  const memberUid = requireString(
-    request.data?.memberUid,
-    "member UID"
-  );
-
+  const conversationId = requireString(request.data?.conversationId, "conversation ID");
+  const memberUid = requireString(request.data?.memberUid, "member UID");
   const { ref, data } = await requireGroupOwner(uid, conversationId);
 
   if (memberUid === uid) {
-    throw new HttpsError(
-      "invalid-argument",
-      "You cannot remove yourself with this action."
-    );
+    throw new HttpsError("invalid-argument", "You cannot remove yourself with this action.");
   }
 
   if (!data.members.includes(memberUid)) {
-    throw new HttpsError(
-      "not-found",
-      "That user is not in the group."
-    );
+    throw new HttpsError("not-found", "That user is not in the group.");
   }
 
   await ref.update({
-    members: data.members.filter((id) => id !== memberUid),
+    members: data.members.filter(id => id !== memberUid),
     updatedAt: admin.firestore.FieldValue.serverTimestamp()
   });
 
   await addSystemMessage(ref, "A member was removed from the group.");
-
   return { success: true };
 });
 
-exports.transferGroupOwnership = onCall(async (request) => {
+exports.transferGroupOwnership = onCall(async request => {
   const uid = requireSignedIn(request);
-
-  const conversationId = requireString(
-    request.data?.conversationId,
-    "conversation ID"
-  );
-
-  const newOwnerUid = requireString(
-    request.data?.newOwnerUid,
-    "new owner UID"
-  );
-
+  const conversationId = requireString(request.data?.conversationId, "conversation ID");
+  const newOwnerUid = requireString(request.data?.newOwnerUid, "new owner UID");
   const { ref, data } = await requireGroupOwner(uid, conversationId);
 
   if (!data.members.includes(newOwnerUid)) {
-    throw new HttpsError(
-      "invalid-argument",
-      "The new owner must already be a group member."
-    );
+    throw new HttpsError("invalid-argument", "The new owner must already be a group member.");
   }
 
   await ref.update({
@@ -403,22 +343,15 @@ exports.transferGroupOwnership = onCall(async (request) => {
   });
 
   await addSystemMessage(ref, "Group ownership was transferred.");
-
   return { success: true };
 });
 
-exports.deleteGroupConversation = onCall(async (request) => {
+exports.deleteGroupConversation = onCall(async request => {
   const uid = requireSignedIn(request);
-
-  const conversationId = requireString(
-    request.data?.conversationId,
-    "conversation ID"
-  );
-
+  const conversationId = requireString(request.data?.conversationId, "conversation ID");
   const { ref } = await requireGroupOwner(uid, conversationId);
 
   await db.recursiveDelete(ref);
-
   return { success: true };
 });
 
@@ -426,7 +359,7 @@ exports.deleteGroupConversation = onCall(async (request) => {
 // DEVELOPER: USER MANAGEMENT
 // ------------------------------
 
-exports.adminListUsers = onCall(async (request) => {
+exports.adminListUsers = onCall(async request => {
   requireDeveloper(request);
 
   const users = [];
@@ -441,9 +374,7 @@ exports.adminListUsers = onCall(async (request) => {
       users.push({
         uid: user.uid,
         email: user.email || "",
-        username: profile.exists
-          ? profile.data().username || ""
-          : "",
+        username: profile.exists ? profile.data().username || "" : "",
         disabled: user.disabled,
         creationTime: user.metadata.creationTime
       });
@@ -455,111 +386,85 @@ exports.adminListUsers = onCall(async (request) => {
   return { users };
 });
 
-exports.adminSetUserDisabled = onCall(async (request) => {
+exports.adminSetUserDisabled = onCall(async request => {
   requireDeveloper(request);
 
   const uid = requireString(request.data?.uid, "user UID");
   const disabled = request.data?.disabled;
 
   if (typeof disabled !== "boolean") {
-    throw new HttpsError(
-      "invalid-argument",
-      "Disabled must be true or false."
-    );
+    throw new HttpsError("invalid-argument", "Disabled must be true or false.");
   }
 
   await auth.updateUser(uid, { disabled });
 
-  if (disabled) {
-    await auth.revokeRefreshTokens(uid);
-  }
+  if (disabled) await auth.revokeRefreshTokens(uid);
 
   return { success: true };
 });
 
-exports.adminRevokeUserSessions = onCall(async (request) => {
+exports.adminRevokeUserSessions = onCall(async request => {
   requireDeveloper(request);
-
   const uid = requireString(request.data?.uid, "user UID");
-
   await auth.revokeRefreshTokens(uid);
-
   return { success: true };
 });
 
 // ------------------------------
-// DEVELOPER: CONVERSATION MANAGEMENT
+// DEVELOPER: CONVERSATIONS
 // ------------------------------
 
-exports.adminListConversations = onCall(async (request) => {
+exports.adminListConversations = onCall(async request => {
   requireDeveloper(request);
 
   const snapshot = await db.collection("conversations").get();
 
-  const conversations = snapshot.docs.map((doc) => {
-    const data = doc.data();
+  return {
+    conversations: snapshot.docs.map(document => {
+      const data = document.data();
 
-    return {
-      id: doc.id,
-      name: data.name || "",
-      isGroup: data.isGroup === true,
-      members: data.members || [],
-      ownerUid: data.ownerUid || "",
-      lastMessage: data.lastMessage || "",
-      updatedAt: data.updatedAt || null
-    };
-  });
-
-  return { conversations };
+      return {
+        id: document.id,
+        name: data.name || "",
+        isGroup: data.isGroup === true,
+        members: data.members || [],
+        ownerUid: data.ownerUid || "",
+        lastMessage: data.lastMessage || "",
+        updatedAt: data.updatedAt || null
+      };
+    })
+  };
 });
 
-exports.adminGetConversation = onCall(async (request) => {
+exports.adminGetConversation = onCall(async request => {
   requireDeveloper(request);
 
-  const conversationId = requireString(
-    request.data?.conversationId,
-    "conversation ID"
-  );
-
+  const conversationId = requireString(request.data?.conversationId, "conversation ID");
   const { data } = await getConversation(conversationId);
 
-  const messagesSnapshot = await db
-    .collection("conversations")
+  const messagesSnapshot = await db.collection("conversations")
     .doc(conversationId)
     .collection("messages")
     .orderBy("createdAt", "asc")
     .limit(500)
     .get();
 
-  const messages = messagesSnapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data()
-  }));
-
   return {
-    conversation: {
-      id: conversationId,
-      ...data
-    },
-    messages
+    conversation: { id: conversationId, ...data },
+    messages: messagesSnapshot.docs.map(document => ({
+      id: document.id,
+      ...document.data()
+    }))
   };
 });
 
-exports.adminDeleteMessage = onCall(async (request) => {
+exports.adminDeleteMessage = onCall(async request => {
   requireDeveloper(request);
 
-  const conversationId = requireString(
-    request.data?.conversationId,
-    "conversation ID"
-  );
+  const conversationId = requireString(request.data?.conversationId, "conversation ID");
+  const messageId = requireString(request.data?.messageId, "message ID");
 
-  const messageId = requireString(
-    request.data?.messageId,
-    "message ID"
-  );
-
-  await db
-    .collection("conversations")
+  await db.collection("conversations")
     .doc(conversationId)
     .collection("messages")
     .doc(messageId)
@@ -568,14 +473,10 @@ exports.adminDeleteMessage = onCall(async (request) => {
   return { success: true };
 });
 
-exports.adminDeleteConversation = onCall(async (request) => {
+exports.adminDeleteConversation = onCall(async request => {
   requireDeveloper(request);
 
-  const conversationId = requireString(
-    request.data?.conversationId,
-    "conversation ID"
-  );
-
+  const conversationId = requireString(request.data?.conversationId, "conversation ID");
   const ref = db.collection("conversations").doc(conversationId);
 
   if (!(await ref.get()).exists) {
@@ -583,7 +484,6 @@ exports.adminDeleteConversation = onCall(async (request) => {
   }
 
   await db.recursiveDelete(ref);
-
   return { success: true };
 });
 
@@ -591,7 +491,7 @@ exports.adminDeleteConversation = onCall(async (request) => {
 // DEVELOPER: RESET APPLICATION DATA
 // ------------------------------
 
-exports.adminResetAllData = onCall(async (request) => {
+exports.adminResetAllData = onCall(async request => {
   requireDeveloper(request);
 
   if (request.data?.confirmation !== "RESET ALL DATA") {
@@ -601,29 +501,18 @@ exports.adminResetAllData = onCall(async (request) => {
     );
   }
 
-  // Delete all conversations and their message subcollections.
   await db.recursiveDelete(db.collection("conversations"));
-
-  // Delete all message requests.
   await db.recursiveDelete(db.collection("messageRequests"));
 
-  // Remove per-user app data while preserving user profiles
-  // and Firebase Authentication accounts.
   const usersSnapshot = await db.collection("users").get();
 
   for (const userDoc of usersSnapshot.docs) {
     const uid = userDoc.id;
 
     await Promise.all([
-      db.recursiveDelete(
-        db.collection("users").doc(uid).collection("blocks")
-      ),
-      db.recursiveDelete(
-        db.collection("users").doc(uid).collection("conversationPreferences")
-      ),
-      db.recursiveDelete(
-        db.collection("users").doc(uid).collection("hiddenMessages")
-      )
+      db.recursiveDelete(db.collection("users").doc(uid).collection("blocks")),
+      db.recursiveDelete(db.collection("users").doc(uid).collection("conversationPreferences")),
+      db.recursiveDelete(db.collection("users").doc(uid).collection("hiddenMessages"))
     ]);
   }
 
