@@ -837,9 +837,15 @@ async function sendMessageRequest(user) {
     alert("Message request sent!");
 
   } catch (error) {
-    console.error(error);
-    showError("Could not send request: " + friendlyError(error));
-  }
+    console.error("MESSAGE REQUEST ERROR:", error);
+    console.error("Error code:", error.code);
+    console.error("Error message:", error.message);
+
+    alert(
+        "Request failed!\n\n" +
+        "Code: " + error.code + "\n" +
+        "Message: " + error.message
+    );
 }
 
 
