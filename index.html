@@ -480,8 +480,14 @@ input:focus {border-color:var(--blue)}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 
 import {
-  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-  onAuthStateChanged, signOut, sendPasswordResetEmail
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+  sendPasswordResetEmail,
+  EmailAuthProvider,
+  reauthenticateWithCredential
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 import {
@@ -2111,58 +2117,159 @@ document.addEventListener("keydown", event => {
 });
 
 async function openDeveloperPanel() {
-  try {
-    await verifyDeveloperSession();
-  } catch (error) {
-    showError(friendlyError(error));
+  if (!developerAccountSelected()) {
+    showError("Only the developer account can open this panel.");
     return;
   }
 
-  if (!developerAccountSelected()) return;
+  const developer = auth.currentUser;
+
+  if (
+    !developer ||
+    developer.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()
+  ) {
+    showError("Sign in with your developer account first.");
+    return;
+  }
+
+  showModal(`
+    <h2>Developer Verification</h2>
+
+    <p style="color:var(--muted)">
+      Enter your account password to open the developer panel.
+    </p>
+
+    <form id="developerUnlockForm">
+      <input
+        id="developerUnlockPassword"
+        type="password"
+        placeholder="Your account password"
+        autocomplete="current-password"
+        required
+      >
+
+      <div
+        id="developerUnlockError"
+        class="error"
+        role="alert"
+      ></div>
+
+      <button
+        id="developerUnlockButton"
+        class="primary-btn"
+        type="submit"
+      >
+        Unlock Panel
+      </button>
+    </form>
+  `);
 
   adminPanelOpen = true;
 
-  showModal(`
-    <h2>iCom Developer Panel</h2>
+  const form = $("developerUnlockForm");
+  const passwordInput = $("developerUnlockPassword");
+  const errorBox = $("developerUnlockError");
+  const unlockButton = $("developerUnlockButton");
 
-    <p style="color:var(--muted)">
-      Firestore administration. Lists show up to
-      ${ADMIN_PAGE_SIZE} records at a time.
-    </p>
+  passwordInput.focus();
 
-    <div class="modal-actions">
-      <button class="secondary-btn" id="adminUsers">
-        View User Profiles
-      </button>
+  form.onsubmit = async event => {
+    event.preventDefault();
 
-      <button class="secondary-btn" id="adminConversations">
-        View Conversations
-      </button>
+    if (unlockButton.disabled) return;
 
-      <button class="danger-btn" id="adminVoidRequests">
-        Clear Message Requests
-      </button>
-    </div>
+    const password = passwordInput.value;
+    passwordInput.value = "";
+    errorBox.textContent = "";
+    unlockButton.disabled = true;
 
-    <p class="notice">
-      Account suspension, session revocation, full resets,
-      and whole-conversation deletion are not available here.
-    </p>
+    try {
+      if (
+        auth.currentUser?.uid !== developer.uid ||
+        !developerAccountSelected()
+      ) {
+        throw new Error(
+          "Your signed-in account changed. Close this window and try again."
+        );
+      }
 
-    <div
-      id="adminResults"
-      class="admin-list"
-      style="margin-top:15px"
-    >
-      Select a tool above.
-    </div>
-  `);
+      const credential = EmailAuthProvider.credential(
+        developer.email,
+        password
+      );
 
-  $("adminUsers").onclick = adminViewUsers;
-  $("adminConversations").onclick = adminViewConversations;
-  $("adminVoidRequests").onclick = adminVoidAllMessageRequests;
+      await reauthenticateWithCredential(
+        developer,
+        credential
+      );
+
+      await verifyDeveloperSession();
+
+      // Do not reopen the panel if the dialog was closed,
+      // replaced, or the account changed during verification.
+      if (
+        $("modal").classList.contains("hidden") ||
+        $("developerUnlockForm") !== form ||
+        auth.currentUser?.uid !== developer.uid
+      ) {
+        return;
+      }
+
+      showModal(`
+        <h2>iCom Developer Panel</h2>
+
+        <p style="color:var(--muted)">
+          Firestore administration. Lists show up to
+          ${ADMIN_PAGE_SIZE} records at a time.
+        </p>
+
+        <div class="modal-actions">
+          <button class="secondary-btn" id="adminUsers">
+            View User Profiles
+          </button>
+
+          <button class="secondary-btn" id="adminConversations">
+            View Conversations
+          </button>
+
+          <button class="danger-btn" id="adminVoidRequests">
+            Clear Message Requests
+          </button>
+        </div>
+
+        <p class="notice">
+          Account suspension, session revocation, full resets,
+          and whole-conversation deletion are not available here.
+        </p>
+
+        <div
+          id="adminResults"
+          class="admin-list"
+          style="margin-top:15px"
+        >
+          Select a tool above.
+        </div>
+      `);
+
+      adminPanelOpen = true;
+
+      $("adminUsers").onclick = adminViewUsers;
+      $("adminConversations").onclick =
+        adminViewConversations;
+      $("adminVoidRequests").onclick =
+        adminVoidAllMessageRequests;
+    } catch (error) {
+      console.error("Developer verification failed:", error);
+
+      if ($("developerUnlockForm") !== form) return;
+
+      errorBox.textContent = friendlyError(error);
+      unlockButton.disabled = false;
+      passwordInput.focus();
+    }
+  };
 }
-
+  
 async function adminViewUsers() {
   const results = getAdminResults();
   if (!results) return;
