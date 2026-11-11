@@ -797,15 +797,6 @@ async function sendMessageRequest(user) {
   }
 
   try {
-    const theirBlock = await getDoc(
-      doc(db, "users", user.uid, "blocks", currentUser.uid)
-    );
-
-    if (theirBlock.exists()) {
-      showError("This user is not accepting your requests.");
-      return;
-    }
-
     const requestId = currentUser.uid + "_" + user.uid;
     const reverseId = user.uid + "_" + currentUser.uid;
 
@@ -842,12 +833,12 @@ async function sendMessageRequest(user) {
     console.error("Error message:", error.message);
 
     alert(
-        "Request failed!\n\n" +
-        "Code: " + error.code + "\n" +
-        "Message: " + error.message
+      "Request failed!\n\n" +
+      "Code: " + error.code + "\n" +
+      "Message: " + error.message
     );
+  }
 }
-
 
 // LOAD INCOMING REQUESTS
 
