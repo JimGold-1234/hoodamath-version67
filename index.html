@@ -8,406 +8,251 @@
 
 <style>
 :root {
-  --bg: #0b1020;
-  --panel: #121b2e;
-  --panel2: #18243a;
-  --border: #263650;
-  --text: #f2f5fa;
-  --muted: #9aabc2;
-  --blue: #4385ff;
-  --blue2: #2866db;
-  --green: #48d6a0;
-  --red: #ff6666;
+  --bg:#0b1020;
+  --panel:#121b2e;
+  --panel2:#18243a;
+  --border:#263650;
+  --text:#f2f5fa;
+  --muted:#9aabc2;
+  --blue:#4385ff;
+  --blue2:#2866db;
+  --green:#48d6a0;
+  --red:#ff6666;
 }
 
-* {
-  box-sizing: border-box;
-}
-
+* {box-sizing:border-box}
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: Arial, sans-serif;
-  min-height: 100vh;
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,sans-serif;
+  min-height:100vh;
 }
-
-button, input {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-.hidden {
-  display: none !important;
-}
+button,input {font:inherit}
+button {cursor:pointer}
+button:disabled {opacity:.5;cursor:not-allowed}
+.hidden {display:none!important}
 
 #authScreen {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
 }
-
 .auth-card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  width: 100%;
-  max-width: 420px;
-  padding: 32px;
-  border-radius: 18px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  width:100%;
+  max-width:420px;
+  padding:32px;
+  border-radius:18px;
 }
-
 .logo {
-  font-size: 38px;
-  font-weight: 800;
-  letter-spacing: -2px;
-  margin-bottom: 5px;
+  font-size:38px;
+  font-weight:800;
+  letter-spacing:-2px;
+  margin-bottom:5px;
 }
-
-.logo span {
-  color: var(--blue);
-}
-
-.subtitle {
-  color: var(--muted);
-  margin-bottom: 28px;
-}
-
+.logo span {color:var(--blue)}
+.subtitle {color:var(--muted);margin-bottom:28px}
 input {
-  width: 100%;
-  padding: 13px;
-  background: #0c1526;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  color: white;
-  outline: none;
-  margin-bottom: 12px;
+  width:100%;
+  padding:13px;
+  background:#0c1526;
+  border:1px solid var(--border);
+  border-radius:9px;
+  color:white;
+  outline:none;
+  margin-bottom:12px;
 }
-
-input:focus {
-  border-color: var(--blue);
-}
-
+input:focus {border-color:var(--blue)}
 .primary-btn {
-  width: 100%;
-  border: none;
-  border-radius: 9px;
-  padding: 13px;
-  background: var(--blue);
-  color: white;
-  font-weight: bold;
+  border:0;
+  border-radius:9px;
+  padding:12px 15px;
+  background:var(--blue);
+  color:white;
+  font-weight:bold;
 }
-
-.primary-btn:hover {
-  background: var(--blue2);
-}
-
+.primary-btn:hover {background:var(--blue2)}
+.auth-card .primary-btn {width:100%;padding:13px}
 .secondary-btn {
-  background: var(--panel2);
-  border: 1px solid var(--border);
-  color: white;
-  border-radius: 8px;
-  padding: 10px 13px;
+  background:var(--panel2);
+  border:1px solid var(--border);
+  color:white;
+  border-radius:8px;
+  padding:9px 12px;
 }
-
+.danger-btn {
+  background:#49252d;
+  border:1px solid #743b48;
+  color:#ffb4bd;
+  border-radius:8px;
+  padding:9px 12px;
+}
 .link-btn {
-  border: none;
-  background: none;
-  color: #78a8ff;
-  margin-top: 17px;
-  width: 100%;
+  border:0;
+  background:none;
+  color:#78a8ff;
+  margin-top:16px;
+  width:100%;
 }
-
-.error {
-  color: var(--red);
-  font-size: 13px;
-  margin-bottom: 12px;
-}
+.error {color:var(--red);font-size:13px;margin:10px 0}
+.success {color:var(--green);font-size:13px;margin:10px 0}
 
 #app {
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
+  display:flex;
+  height:100vh;
+  overflow:hidden;
 }
-
 .sidebar {
-  width: 320px;
-  min-width: 280px;
-  background: var(--panel);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
+  width:320px;
+  min-width:280px;
+  background:var(--panel);
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
 }
-
 .sidebar-header {
-  padding: 20px;
-  border-bottom: 1px solid var(--border);
+  padding:20px;
+  border-bottom:1px solid var(--border);
 }
-
-.sidebar-header .logo {
-  font-size: 29px;
-}
-
+.sidebar-header .logo {font-size:29px}
+.sidebar-scroll {overflow-y:auto;flex:1}
 .sidebar-section {
-  padding: 15px 16px 5px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: bold;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  padding:15px 16px 5px;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:bold;
+  letter-spacing:1px;
+  text-transform:uppercase;
 }
-
-#conversationList,
-#userList {
-  padding: 5px 10px;
-}
-
-.sidebar-scroll {
-  overflow-y: auto;
-  flex: 1;
-}
-
+#conversationList,#userList,#requestList {padding:5px 10px}
 .list-item {
-  width: 100%;
-  border: none;
-  background: transparent;
-  color: white;
-  padding: 12px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  text-align: left;
-  margin-bottom: 3px;
+  width:100%;
+  border:0;
+  background:transparent;
+  color:white;
+  padding:11px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  text-align:left;
+  margin-bottom:3px;
 }
-
-.list-item:hover,
-.list-item.active {
-  background: var(--panel2);
-}
-
+.list-item:hover,.list-item.active {background:var(--panel2)}
 .avatar {
-  width: 39px;
-  height: 39px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #244578;
-  color: #c6dcff;
-  font-weight: bold;
+  width:39px;
+  height:39px;
+  flex-shrink:0;
+  border-radius:50%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#244578;
+  color:#c6dcff;
+  font-weight:bold;
 }
-
-.item-details {
-  min-width: 0;
-  flex: 1;
-}
-
-.item-name {
-  display: block;
-  font-size: 14px;
-  font-weight: bold;
-}
-
+.item-details {min-width:0;flex:1}
+.item-name {display:block;font-size:14px;font-weight:bold}
 .item-subtitle {
-  display: block;
-  color: var(--muted);
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin-top: 4px;
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  margin-top:4px;
 }
-
 .sidebar-bottom {
-  padding: 15px;
-  border-top: 1px solid var(--border);
+  padding:15px;
+  border-top:1px solid var(--border);
 }
-
-.profile-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.profile-info {
-  min-width: 0;
-  flex: 1;
-}
-
-.profile-info strong {
-  display: block;
-  font-size: 14px;
-}
-
+.profile-row {display:flex;align-items:center;gap:10px}
+.profile-info {min-width:0;flex:1}
+.profile-info strong {display:block;font-size:14px}
 .profile-info small {
-  color: var(--muted);
-  overflow-wrap: anywhere;
+  color:var(--muted);
+  overflow-wrap:anywhere;
 }
-
-.main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.welcome {
-  margin: auto;
-  text-align: center;
-  padding: 30px;
-}
-
-.welcome h1 {
-  font-size: 36px;
-}
-
-.welcome p {
-  color: var(--muted);
-}
-
+.main {flex:1;min-width:0;display:flex;flex-direction:column}
+.welcome {margin:auto;text-align:center;padding:30px}
+.welcome h1 {font-size:36px}
+.welcome p {color:var(--muted)}
 .chat-header {
-  padding: 17px 22px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 75px;
+  padding:15px 20px;
+  background:var(--panel);
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:75px;
 }
-
-.chat-header-info {
-  flex: 1;
-}
-
-.chat-header-info strong {
-  display: block;
-}
-
-.chat-header-info small {
-  color: var(--muted);
-}
-
+.chat-header-info {flex:1;min-width:0}
+.chat-header-info strong {display:block}
+.chat-header-info small {color:var(--muted)}
 #messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  flex:1;
+  overflow-y:auto;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
 }
-
 .message {
-  max-width: min(75%, 550px);
-  display: flex;
-  flex-direction: column;
-  align-self: flex-start;
+  max-width:min(75%,550px);
+  display:flex;
+  flex-direction:column;
+  align-self:flex-start;
 }
-
-.message.mine {
-  align-self: flex-end;
-}
-
-.message-author {
-  font-size: 11px;
-  color: var(--muted);
-  margin-bottom: 5px;
-}
-
+.message.mine {align-self:flex-end}
+.message-author {font-size:11px;color:var(--muted);margin-bottom:5px}
 .message-bubble {
-  background: var(--panel2);
-  padding: 11px 14px;
-  border-radius: 12px;
-  overflow-wrap: anywhere;
-  line-height: 1.45;
-  white-space: pre-wrap;
+  background:var(--panel2);
+  padding:11px 14px;
+  border-radius:12px;
+  overflow-wrap:anywhere;
+  line-height:1.45;
+  white-space:pre-wrap;
 }
-
-.message.mine .message-bubble {
-  background: var(--blue2);
-}
-
-.message-time {
-  color: var(--muted);
-  font-size: 10px;
-  margin-top: 5px;
-}
-
+.message.mine .message-bubble {background:var(--blue2)}
+.message-time {color:var(--muted);font-size:10px;margin-top:5px}
+.chat-empty {color:var(--muted);margin:auto;text-align:center}
 .message-form {
-  padding: 15px 20px;
-  display: flex;
-  gap: 10px;
-  background: var(--panel);
-  border-top: 1px solid var(--border);
+  padding:15px 20px;
+  display:flex;
+  gap:10px;
+  background:var(--panel);
+  border-top:1px solid var(--border);
 }
-
-.message-form input {
-  margin: 0;
-  flex: 1;
+.message-form input {margin:0;flex:1;min-width:0}
+.message-form button {min-width:75px}
+#mobileBack {display:none}
+.notice {
+  color:var(--muted);
+  font-size:12px;
+  padding:8px 12px;
 }
-
-.message-form button {
-  width: auto;
-  padding: 0 22px;
-}
-
-.chat-empty {
-  color: var(--muted);
-  margin: auto;
-  text-align: center;
-}
-
-.status {
-  color: var(--green);
-  font-size: 12px;
-  margin-top: 10px;
-}
-
-#mobileBack {
-  display: none;
-}
-
 @media(max-width:700px) {
-  .sidebar {
-    width: 100%;
-    min-width: 0;
-  }
-
-  .main {
-    width: 100%;
-  }
-
-  #app.show-chat .sidebar {
-    display: none;
-  }
-
-  #app:not(.show-chat) .main {
-    display: none;
-  }
-
-  #mobileBack {
-    display: block;
-  }
-
-  .auth-card {
-    padding: 24px;
-  }
+  .sidebar {width:100%;min-width:0}
+  .main {width:100%}
+  #app.show-chat .sidebar {display:none}
+  #app:not(.show-chat) .main {display:none}
+  #mobileBack {display:block}
+  .auth-card {padding:24px}
+  .message {max-width:90%}
 }
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN AND REGISTRATION -->
+<!-- AUTHENTICATION -->
 
 <section id="authScreen">
   <div class="auth-card">
-
     <div class="logo">i<span>Com</span></div>
     <div class="subtitle">Your conversations, all in one place.</div>
 
@@ -419,14 +264,9 @@ input:focus {
       <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password">
 
       <div id="loginError" class="error"></div>
-
       <button class="primary-btn" id="loginButton">Sign In</button>
-
       <button class="link-btn" id="forgotPassword">Forgot your password?</button>
-
-      <button class="link-btn" id="showRegister">
-        Don't have an account? Create one
-      </button>
+      <button class="link-btn" id="showRegister">Don't have an account? Create one</button>
     </div>
 
     <div id="registerForm" class="hidden">
@@ -438,14 +278,9 @@ input:focus {
       <input id="registerPassword" type="password" placeholder="Password (at least 8 characters)" autocomplete="new-password">
 
       <div id="registerError" class="error"></div>
-
       <button class="primary-btn" id="registerButton">Create Account</button>
-
-      <button class="link-btn" id="showLogin">
-        Already have an account? Sign in
-      </button>
+      <button class="link-btn" id="showLogin">Already have an account? Sign in</button>
     </div>
-
   </div>
 </section>
 
@@ -462,7 +297,7 @@ input:focus {
     </div>
 
     <div style="padding:13px 14px 0">
-      <input id="searchUsers" type="search" placeholder="Search people...">
+      <input id="searchUsers" type="search" placeholder="Search emails or usernames...">
     </div>
 
     <div class="sidebar-scroll">
@@ -470,20 +305,28 @@ input:focus {
       <div class="sidebar-section">Conversations</div>
       <div id="conversationList"></div>
 
-      <div class="sidebar-section">People</div>
+      <div style="padding:5px 14px">
+        <button id="newGroupButton" class="secondary-btn" style="width:100%">
+          + New Group
+        </button>
+      </div>
+
+      <div class="sidebar-section">Discovery</div>
+      <div class="notice">Find people and send them a message request.</div>
       <div id="userList"></div>
+
+      <div class="sidebar-section">Message Requests</div>
+      <div id="requestList"></div>
 
     </div>
 
     <div class="sidebar-bottom">
       <div class="profile-row">
         <div class="avatar" id="myAvatar">?</div>
-
         <div class="profile-info">
           <strong id="myUsername">Loading...</strong>
           <small id="myEmail"></small>
         </div>
-
         <button class="secondary-btn" id="signOutButton">Exit</button>
       </div>
     </div>
@@ -495,10 +338,11 @@ input:focus {
     <div id="welcomeScreen" class="welcome">
       <div class="logo">i<span>Com</span></div>
       <h1>Welcome to iCom</h1>
-      <p>Select a person or conversation to get started.</p>
+      <p>Select a conversation or discover someone new.</p>
     </div>
 
-    <section id="chatScreen" class="hidden" style="display:flex;flex-direction:column;flex:1;min-height:0">
+    <section id="chatScreen" class="hidden"
+      style="display:flex;flex-direction:column;flex:1;min-height:0">
 
       <header class="chat-header">
         <button id="mobileBack" class="secondary-btn">Back</button>
@@ -508,6 +352,8 @@ input:focus {
           <strong id="chatTitle">Conversation</strong>
           <small id="chatSubtitle"></small>
         </div>
+
+        <button id="blockButton" class="danger-btn" hidden>Block User</button>
       </header>
 
       <div id="messages">
@@ -515,20 +361,23 @@ input:focus {
       </div>
 
       <form id="messageForm" class="message-form">
-        <input id="messageInput" maxlength="2000" placeholder="Write a message..." autocomplete="off" required>
+        <input id="messageInput" maxlength="2000"
+          placeholder="Write a message..." autocomplete="off" required>
         <button class="primary-btn" type="submit">Send</button>
       </form>
 
     </section>
 
   </main>
-
 </div>
 
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+// FIREBASE IMPORTS
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 
 import {
   getAuth,
@@ -546,13 +395,14 @@ import {
   setDoc,
   addDoc,
   updateDoc,
+  deleteDoc,
   collection,
   query,
   where,
-  orderBy,
   getDocs,
   onSnapshot,
-  serverTimestamp
+  serverTimestamp,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
 
@@ -567,9 +417,9 @@ const firebaseConfig = {
   appId: "1:857687293653:web:2deef3b103295f94e0ac5c"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
 
 
 // APPLICATION STATE
@@ -578,19 +428,91 @@ let currentUser = null;
 let currentProfile = null;
 let currentConversation = null;
 let currentMembers = [];
+let currentMessages = [];
 let usersCache = [];
-let conversationUnsubscribe = null;
-let messageUnsubscribe = null;
+let conversationsCache = [];
+
 let usersUnsubscribe = null;
 let conversationsUnsubscribe = null;
+let messageUnsubscribe = null;
+let requestsUnsubscribe = null;
+let sentRequestsUnsubscribe = null;
+let blocksUnsubscribe = null;
 
-
-// ELEMENT SHORTCUTS
+let blockedUsers = new Set();
+let sentRequests = new Set();
+let incomingRequests = [];
 
 const $ = id => document.getElementById(id);
 
 
-// AUTHENTICATION SCREENS
+// GENERAL HELPERS
+
+function friendlyError(error) {
+  const errors = {
+    "auth/email-already-in-use": "This email already has an account.",
+    "auth/invalid-email": "Please enter a valid email address.",
+    "auth/weak-password": "Your password must be at least 8 characters.",
+    "auth/invalid-credential": "Incorrect email or password.",
+    "auth/user-not-found": "No account was found with that email.",
+    "auth/wrong-password": "Incorrect password.",
+    "auth/too-many-requests": "Too many attempts. Try again later.",
+    "auth/network-request-failed": "Network error. Check your connection.",
+    "permission-denied": "You do not have permission to do that."
+  };
+
+  return errors[error.code] || error.message || "Something went wrong.";
+}
+
+function showError(message) {
+  alert(message);
+}
+
+function makeAvatar(name) {
+  return (name || "?").trim().charAt(0).toUpperCase();
+}
+
+function setAvatar(element, name) {
+  element.textContent = makeAvatar(name);
+}
+
+function getOtherMembers(members) {
+  return members.filter(uid => uid !== currentUser.uid);
+}
+
+function getUser(uid) {
+  return usersCache.find(user => user.uid === uid);
+}
+
+function getConversationName(data) {
+  if (data.isGroup) return data.name || "Group chat";
+
+  const otherUid = data.members.find(uid => uid !== currentUser.uid);
+  return getUser(otherUid)?.username || "Conversation";
+}
+
+function cleanupListeners() {
+  [
+    usersUnsubscribe,
+    conversationsUnsubscribe,
+    messageUnsubscribe,
+    requestsUnsubscribe,
+    sentRequestsUnsubscribe,
+    blocksUnsubscribe
+  ].forEach(unsubscribe => {
+    if (unsubscribe) unsubscribe();
+  });
+
+  usersUnsubscribe = null;
+  conversationsUnsubscribe = null;
+  messageUnsubscribe = null;
+  requestsUnsubscribe = null;
+  sentRequestsUnsubscribe = null;
+  blocksUnsubscribe = null;
+}
+
+
+// AUTHENTICATION SCREEN SWITCHING
 
 $("showRegister").onclick = () => {
   $("loginForm").classList.add("hidden");
@@ -603,25 +525,6 @@ $("showLogin").onclick = () => {
 };
 
 
-// FRIENDLY ERROR MESSAGES
-
-function friendlyError(error) {
-  const errors = {
-    "auth/email-already-in-use": "This email already has an account.",
-    "auth/invalid-email": "Please enter a valid email address.",
-    "auth/weak-password": "Your password must be at least 8 characters.",
-    "auth/invalid-credential": "Incorrect email or password.",
-    "auth/user-not-found": "No account was found with that email.",
-    "auth/wrong-password": "Incorrect password.",
-    "auth/too-many-requests": "Too many attempts. Please try again later.",
-    "auth/network-request-failed": "Network error. Check your internet connection.",
-    "permission-denied": "You do not have permission to do that."
-  };
-
-  return errors[error.code] || error.message || "Something went wrong.";
-}
-
-
 // REGISTER
 
 $("registerButton").onclick = async () => {
@@ -631,21 +534,21 @@ $("registerButton").onclick = async () => {
 
   $("registerError").textContent = "";
 
-  if(username.length < 3 || username.length > 24) {
+  if (username.length < 3 || username.length > 24) {
     $("registerError").textContent =
       "Username must be between 3 and 24 characters.";
     return;
   }
 
-  if(password.length < 8) {
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) {
     $("registerError").textContent =
-      "Password must be at least 8 characters.";
+      "Usernames can only contain letters, numbers, and underscores.";
     return;
   }
 
-  if(!/^[a-zA-Z0-9_]+$/.test(username)) {
+  if (password.length < 8) {
     $("registerError").textContent =
-      "Usernames can only contain letters, numbers, and underscores.";
+      "Password must be at least 8 characters.";
     return;
   }
 
@@ -654,19 +557,18 @@ $("registerButton").onclick = async () => {
 
   try {
     const credential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
+      auth, email, password
     );
 
     await setDoc(doc(db, "users", credential.user.uid), {
       username,
       usernameLower: username.toLowerCase(),
       email,
+      emailLower: email,
       createdAt: serverTimestamp()
     });
 
-  } catch(error) {
+  } catch (error) {
     $("registerError").textContent = friendlyError(error);
   } finally {
     $("registerButton").disabled = false;
@@ -683,7 +585,7 @@ $("loginButton").onclick = async () => {
 
   $("loginError").textContent = "";
 
-  if(!email || !password) {
+  if (!email || !password) {
     $("loginError").textContent = "Enter your email and password.";
     return;
   }
@@ -693,7 +595,7 @@ $("loginButton").onclick = async () => {
 
   try {
     await signInWithEmailAndPassword(auth, email, password);
-  } catch(error) {
+  } catch (error) {
     $("loginError").textContent = friendlyError(error);
   } finally {
     $("loginButton").disabled = false;
@@ -707,9 +609,8 @@ $("loginButton").onclick = async () => {
 $("forgotPassword").onclick = async () => {
   const email = $("loginEmail").value.trim();
 
-  if(!email) {
-    $("loginError").textContent =
-      "Enter your email address first.";
+  if (!email) {
+    $("loginError").textContent = "Enter your email address first.";
     return;
   }
 
@@ -718,7 +619,7 @@ $("forgotPassword").onclick = async () => {
     $("loginError").textContent =
       "Password reset email sent. Check your inbox.";
     $("loginError").style.color = "var(--green)";
-  } catch(error) {
+  } catch (error) {
     $("loginError").textContent = friendlyError(error);
     $("loginError").style.color = "var(--red)";
   }
@@ -727,61 +628,40 @@ $("forgotPassword").onclick = async () => {
 
 // SIGN OUT
 
-$("signOutButton").onclick = async () => {
-  await signOut(auth);
-};
-
-
-// HELPER FUNCTIONS
-
-function makeAvatar(name) {
-  return (name || "?").trim().charAt(0).toUpperCase();
-}
-
-function setAvatar(element, name) {
-  element.textContent = makeAvatar(name);
-}
-
-function showError(message) {
-  alert(message);
-}
-
-function getOtherMembers(members) {
-  return members.filter(uid => uid !== currentUser.uid);
-}
-
-function conversationName(data) {
-  if(data.isGroup) return data.name || "Group chat";
-
-  const otherUid = getOtherMembers(data.members)[0];
-  const other = usersCache.find(user => user.uid === otherUid);
-
-  return other?.username || "Conversation";
-}
+$("signOutButton").onclick = () => signOut(auth);
 
 
 // AUTHENTICATION STATE
 
 onAuthStateChanged(auth, async user => {
-
   cleanupListeners();
 
   currentUser = user;
+  currentProfile = null;
   currentConversation = null;
+  currentMessages = [];
+  usersCache = [];
+  conversationsCache = [];
+  blockedUsers = new Set();
+  sentRequests = new Set();
+  incomingRequests = [];
 
-  if(!user) {
-    currentProfile = null;
+  $("chatScreen").classList.add("hidden");
+  $("welcomeScreen").classList.remove("hidden");
+  $("app").classList.remove("show-chat");
 
+  if (!user) {
     $("authScreen").classList.remove("hidden");
     $("app").classList.add("hidden");
     return;
   }
 
   try {
-    const profileRef = doc(db, "users", user.uid);
-    const profileSnapshot = await getDoc(profileRef);
+    const profileSnapshot = await getDoc(
+      doc(db, "users", user.uid)
+    );
 
-    if(!profileSnapshot.exists()) {
+    if (!profileSnapshot.exists()) {
       await signOut(auth);
       $("loginError").textContent =
         "Your profile could not be found. Please contact support.";
@@ -799,80 +679,75 @@ onAuthStateChanged(auth, async user => {
 
     loadUsers();
     loadConversations();
+    loadIncomingRequests();
+    loadSentRequests();
+    loadBlockedUsers();
 
-  } catch(error) {
+  } catch (error) {
     console.error(error);
     showError("Could not load your account: " + friendlyError(error));
   }
-
 });
-
-
-// CLEAN UP REALTIME LISTENERS
-
-function cleanupListeners() {
-  if(usersUnsubscribe) usersUnsubscribe();
-  if(conversationsUnsubscribe) conversationsUnsubscribe();
-  if(messageUnsubscribe) messageUnsubscribe();
-
-  usersUnsubscribe = null;
-  conversationsUnsubscribe = null;
-  messageUnsubscribe = null;
-}
 
 
 // LOAD USERS
 
 function loadUsers() {
+  usersUnsubscribe = onSnapshot(
+    collection(db, "users"),
+    snapshot => {
+      usersCache = snapshot.docs
+        .map(item => ({
+          uid: item.id,
+          ...item.data()
+        }))
+        .filter(user => user.uid !== currentUser.uid);
 
-  const usersQuery = collection(db, "users");
+      renderUsers();
+      renderConversations();
+      renderIncomingRequests();
 
-  usersUnsubscribe = onSnapshot(usersQuery, snapshot => {
-
-    usersCache = snapshot.docs
-      .map(item => ({
-        uid: item.id,
-        ...item.data()
-      }))
-      .filter(user => user.uid !== currentUser.uid);
-
-    renderUsers();
-    renderConversations();
-
-    if(currentConversation) {
-      updateChatHeader();
+      if (currentConversation) {
+        updateChatHeader();
+        renderMessages(currentMessages);
+      }
+    },
+    error => {
+      console.error(error);
+      $("userList").textContent = "Could not load users.";
     }
-
-  }, error => {
-    console.error(error);
-    $("userList").textContent = "Could not load users.";
-  });
-
+  );
 }
 
 
-// DISPLAY USERS
+// DISCOVERY SEARCH
+
+$("searchUsers").addEventListener("input", renderUsers);
 
 function renderUsers() {
-
   const container = $("userList");
-  const search = $("searchUsers").value.toLowerCase();
+  const search = $("searchUsers").value.trim().toLowerCase();
 
   container.replaceChildren();
 
+  if (!search) {
+    container.textContent = "Search by username or email.";
+    return;
+  }
+
   const filtered = usersCache.filter(user =>
-    (user.username || "").toLowerCase().includes(search)
+    (user.usernameLower || user.username || "").toLowerCase().includes(search) ||
+    (user.emailLower || user.email || "").toLowerCase().includes(search)
   );
 
-  if(filtered.length === 0) {
-    container.textContent = "No users found.";
+  if (filtered.length === 0) {
+    container.textContent = "No matching users found.";
     return;
   }
 
   filtered.forEach(user => {
-
-    const button = document.createElement("button");
-    button.className = "list-item";
+    const row = document.createElement("div");
+    row.className = "list-item";
 
     const avatar = document.createElement("div");
     avatar.className = "avatar";
@@ -883,41 +758,205 @@ function renderUsers() {
 
     const name = document.createElement("span");
     name.className = "item-name";
-    name.textContent = user.username;
+    name.textContent = user.username || "User";
 
     const subtitle = document.createElement("span");
     subtitle.className = "item-subtitle";
-    subtitle.textContent = "Start a conversation";
+    subtitle.textContent = "iCom user";
 
     details.append(name, subtitle);
-    button.append(avatar, details);
 
-    button.onclick = () => openDirectMessage(user);
+    const button = document.createElement("button");
+    button.className = "secondary-btn";
 
-    container.append(button);
+    if (blockedUsers.has(user.uid)) {
+      button.textContent = "Unblock";
+      button.onclick = () => toggleBlock(user);
+    } else if (sentRequests.has(user.uid)) {
+      button.textContent = "Pending";
+      button.disabled = true;
+    } else {
+      button.textContent = "Request";
+      button.onclick = () => sendMessageRequest(user);
+    }
 
+    row.append(avatar, details, button);
+    container.append(row);
   });
-
 }
 
-$("searchUsers").addEventListener("input", renderUsers);
 
+// SEND MESSAGE REQUEST
 
-// OPEN OR CREATE PRIVATE CONVERSATION
+async function sendMessageRequest(user) {
+  if (!currentUser || !user) return;
 
-async function openDirectMessage(otherUser) {
-
-  const members = [currentUser.uid, otherUser.uid].sort();
-  const conversationId = members.join("_");
+  if (blockedUsers.has(user.uid)) {
+    showError("Unblock this user before sending a request.");
+    return;
+  }
 
   try {
+    const theirBlock = await getDoc(
+      doc(db, "users", user.uid, "blocks", currentUser.uid)
+    );
 
-    const conversationRef = doc(db, "conversations", conversationId);
-    const existing = await getDoc(conversationRef);
+    if (theirBlock.exists()) {
+      showError("This user is not accepting your requests.");
+      return;
+    }
 
-    if(!existing.exists()) {
+    const requestId = currentUser.uid + "_" + user.uid;
+    const reverseId = user.uid + "_" + currentUser.uid;
 
-      await setDoc(conversationRef, {
+    const [existing, reverse] = await Promise.all([
+      getDoc(doc(db, "messageRequests", requestId)),
+      getDoc(doc(db, "messageRequests", reverseId))
+    ]);
+
+    if (existing.exists()) {
+      showError("You have already sent this user a request.");
+      return;
+    }
+
+    if (reverse.exists() && reverse.data().status === "pending") {
+      showError("This user has already sent you a request. Check Message Requests.");
+      return;
+    }
+
+    await setDoc(doc(db, "messageRequests", requestId), {
+      senderId: currentUser.uid,
+      recipientId: user.uid,
+      status: "pending",
+      createdAt: serverTimestamp()
+    });
+
+    sentRequests.add(user.uid);
+    renderUsers();
+
+    alert("Message request sent!");
+
+  } catch (error) {
+    console.error(error);
+    showError("Could not send request: " + friendlyError(error));
+  }
+}
+
+
+// LOAD INCOMING REQUESTS
+
+function loadIncomingRequests() {
+  const requestsQuery = query(
+    collection(db, "messageRequests"),
+    where("recipientId", "==", currentUser.uid)
+  );
+
+  requestsUnsubscribe = onSnapshot(requestsQuery, snapshot => {
+    incomingRequests = snapshot.docs
+      .map(item => ({id:item.id,...item.data()}))
+      .filter(request =>
+        request.status === "pending" &&
+        !blockedUsers.has(request.senderId)
+      );
+
+    renderIncomingRequests();
+  }, error => {
+    console.error(error);
+    $("requestList").textContent = "Could not load requests.";
+  });
+}
+
+
+// LOAD SENT REQUESTS
+
+function loadSentRequests() {
+  const requestsQuery = query(
+    collection(db, "messageRequests"),
+    where("senderId", "==", currentUser.uid)
+  );
+
+  sentRequestsUnsubscribe = onSnapshot(requestsQuery, snapshot => {
+    sentRequests = new Set(
+      snapshot.docs
+        .filter(item => item.data().status === "pending")
+        .map(item => item.data().recipientId)
+    );
+
+    renderUsers();
+  }, error => console.error(error));
+}
+
+
+// DISPLAY INCOMING REQUESTS
+
+function renderIncomingRequests() {
+  const container = $("requestList");
+  container.replaceChildren();
+
+  if (incomingRequests.length === 0) {
+    container.textContent = "No new requests.";
+    return;
+  }
+
+  incomingRequests.forEach(request => {
+    const sender = getUser(request.senderId);
+
+    const row = document.createElement("div");
+    row.style.cssText =
+      "padding:12px;margin:5px 0;background:#18243a;border-radius:10px";
+
+    const name = document.createElement("strong");
+    name.textContent = sender?.username || "Unknown user";
+
+    const accept = document.createElement("button");
+    accept.className = "primary-btn";
+    accept.style.cssText = "width:100%;margin-top:10px";
+    accept.textContent = "Accept";
+
+    const reject = document.createElement("button");
+    reject.className = "secondary-btn";
+    reject.style.cssText = "width:100%;margin-top:8px";
+    reject.textContent = "Reject";
+
+    accept.onclick = () => respondToRequest(request, "accepted");
+    reject.onclick = () => respondToRequest(request, "rejected");
+
+    row.append(name, accept, reject);
+    container.append(row);
+  });
+}
+
+
+// ACCEPT OR REJECT REQUEST
+
+async function respondToRequest(request, status) {
+  if (!currentUser || request.recipientId !== currentUser.uid) return;
+
+  try {
+    const theirBlock = await getDoc(
+      doc(db, "users", currentUser.uid, "blocks", request.senderId)
+    );
+
+    const theirBlockCheck = await getDoc(
+      doc(db, "users", request.senderId, "blocks", currentUser.uid)
+    );
+
+    if (status === "accepted" &&
+        (theirBlock.exists() || theirBlockCheck.exists())) {
+      showError("You cannot accept a request while either user has blocked the other.");
+      return;
+    }
+
+    const batch = writeBatch(db);
+    const requestRef = doc(db, "messageRequests", request.id);
+
+    batch.update(requestRef, {status});
+
+    if (status === "accepted") {
+      const members = [request.senderId, request.recipientId].sort();
+      const conversationId = members.join("_");
+
+      batch.set(doc(db, "conversations", conversationId), {
         members,
         isGroup: false,
         createdAt: serverTimestamp(),
@@ -925,97 +964,92 @@ async function openDirectMessage(otherUser) {
         lastMessage: "",
         lastSenderId: ""
       });
-
     }
 
-    await openConversation(conversationId);
+    await batch.commit();
 
-  } catch(error) {
+    if (status === "accepted") {
+      const members = [request.senderId, request.recipientId].sort();
+      await openConversation(members.join("_"));
+    }
+
+  } catch (error) {
     console.error(error);
-    showError("Could not open conversation: " + friendlyError(error));
+    showError("Could not process request: " + friendlyError(error));
   }
-
 }
 
 
-// CREATE GROUP CHAT
+// BLOCK AND UNBLOCK USERS
 
-async function createGroup() {
+async function toggleBlock(user) {
+  if (!currentUser || !user) return;
 
-  const name = prompt("Enter a name for your group:");
-
-  if(!name || !name.trim()) return;
-
-  const names = prompt(
-    "Enter the usernames of the people you want to add, separated by commas:"
+  const blockRef = doc(
+    db, "users", currentUser.uid, "blocks", user.uid
   );
-
-  if(!names) return;
-
-  const requestedNames = names
-    .split(",")
-    .map(name => name.trim().toLowerCase())
-    .filter(Boolean);
-
-  const selectedUsers = usersCache.filter(user =>
-    requestedNames.includes((user.username || "").toLowerCase())
-  );
-
-  const members = [
-    currentUser.uid,
-    ...selectedUsers.map(user => user.uid)
-  ];
-
-  if(members.length < 2) {
-    showError("Add at least one other registered user.");
-    return;
-  }
-
-  if(members.length > 20) {
-    showError("Groups are limited to 20 members.");
-    return;
-  }
 
   try {
+    if (blockedUsers.has(user.uid)) {
+      if (!confirm("Unblock " + user.username + "?")) return;
+      await deleteDoc(blockRef);
+    } else {
+      if (!confirm("Block " + user.username + "?")) return;
 
-    const conversationRef = doc(collection(db, "conversations"));
-
-    await setDoc(conversationRef, {
-      name: name.trim().slice(0, 50),
-      members,
-      isGroup: true,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      lastMessage: "",
-      lastSenderId: ""
-    });
-
-    await openConversation(conversationRef.id);
-
-  } catch(error) {
+      await setDoc(blockRef, {
+        blockedUid: user.uid,
+        createdAt: serverTimestamp()
+      });
+    }
+  } catch (error) {
     console.error(error);
-    showError("Could not create group: " + friendlyError(error));
+    showError("Could not update block settings: " + friendlyError(error));
   }
-
 }
 
 
-// GROUP BUTTON
+// LOAD BLOCK LIST
 
-const groupButton = document.createElement("button");
-groupButton.className = "secondary-btn";
-groupButton.textContent = "+ New Group";
-groupButton.style.width = "100%";
-groupButton.style.marginTop = "12px";
-groupButton.onclick = createGroup;
+function loadBlockedUsers() {
+  const blocksQuery = collection(
+    db, "users", currentUser.uid, "blocks"
+  );
 
-$("conversationList").parentElement.append(groupButton);
+  blocksUnsubscribe = onSnapshot(blocksQuery, snapshot => {
+    blockedUsers = new Set(snapshot.docs.map(item => item.id));
+
+    renderUsers();
+
+    incomingRequests = incomingRequests.filter(
+      request => !blockedUsers.has(request.senderId)
+    );
+
+    renderIncomingRequests();
+
+    if (currentConversation) {
+      renderMessages(currentMessages);
+      updateChatHeader();
+      updateMessageInputState();
+    }
+  }, error => console.error(error));
+}
+
+
+// BLOCK BUTTON
+
+$("blockButton").onclick = async () => {
+  if (!currentConversation || currentConversation.isGroup) return;
+
+  const otherUid = getOtherMembers(currentMembers)[0];
+  const other = getUser(otherUid);
+
+  if (other) await toggleBlock(other);
+};
 
 
 // LOAD CONVERSATIONS
 
 function loadConversations() {
-
   const conversationsQuery = query(
     collection(db, "conversations"),
     where("members", "array-contains", currentUser.uid)
@@ -1024,60 +1058,47 @@ function loadConversations() {
   conversationsUnsubscribe = onSnapshot(
     conversationsQuery,
     snapshot => {
-
-      const conversations = snapshot.docs.map(item => ({
-        id: item.id,
+      conversationsCache = snapshot.docs.map(item => ({
+        id:item.id,
         ...item.data()
       }));
 
-      conversations.sort((a, b) => {
+      conversationsCache.sort((a,b) => {
         const timeA = a.updatedAt?.toMillis?.() || 0;
         const timeB = b.updatedAt?.toMillis?.() || 0;
-        return timeB - timeA;
+        return timeB-timeA;
       });
 
-      window.currentConversationList = conversations;
-
       renderConversations();
-
     },
     error => {
       console.error(error);
-      $("conversationList").textContent =
-        "Could not load conversations.";
+      $("conversationList").textContent = "Could not load conversations.";
     }
   );
-
 }
 
 
 // DISPLAY CONVERSATIONS
 
 function renderConversations() {
-
   const container = $("conversationList");
   container.replaceChildren();
 
-  const conversations = window.currentConversationList || [];
-
-  if(conversations.length === 0) {
-    const empty = document.createElement("div");
-    empty.style.cssText = "padding:12px;color:var(--muted);font-size:13px";
-    empty.textContent = "No conversations yet.";
-    container.append(empty);
+  if (conversationsCache.length === 0) {
+    container.textContent = "No conversations yet.";
     return;
   }
 
-  conversations.forEach(conversation => {
-
+  conversationsCache.forEach(conversation => {
     const button = document.createElement("button");
     button.className = "list-item";
 
-    if(currentConversation?.id === conversation.id) {
+    if (currentConversation?.id === conversation.id) {
       button.classList.add("active");
     }
 
-    const name = conversationName(conversation);
+    const name = getConversationName(conversation);
 
     const avatar = document.createElement("div");
     avatar.className = "avatar";
@@ -1098,40 +1119,31 @@ function renderConversations() {
     button.append(avatar, details);
 
     button.onclick = () => openConversation(conversation.id);
-
     container.append(button);
-
   });
-
 }
 
 
-// OPEN A CONVERSATION
+// OPEN CONVERSATION
 
 async function openConversation(conversationId) {
-
   try {
-
     const ref = doc(db, "conversations", conversationId);
     const snapshot = await getDoc(ref);
 
-    if(!snapshot.exists()) {
+    if (!snapshot.exists()) {
       showError("This conversation no longer exists.");
       return;
     }
 
     const data = snapshot.data();
 
-    if(!data.members.includes(currentUser.uid)) {
+    if (!data.members.includes(currentUser.uid)) {
       showError("You are not a member of this conversation.");
       return;
     }
 
-    currentConversation = {
-      id: conversationId,
-      ...data
-    };
-
+    currentConversation = {id:conversationId,...data};
     currentMembers = data.members;
 
     $("welcomeScreen").classList.add("hidden");
@@ -1139,73 +1151,94 @@ async function openConversation(conversationId) {
     $("app").classList.add("show-chat");
 
     updateChatHeader();
+    updateMessageInputState();
 
-    if(messageUnsubscribe) messageUnsubscribe();
+    if (messageUnsubscribe) messageUnsubscribe();
 
     const messagesQuery = query(
       collection(db, "conversations", conversationId, "messages"),
       orderBy("createdAt", "asc")
     );
 
-    messageUnsubscribe = onSnapshot(
-      messagesQuery,
-      snapshot => {
-        renderMessages(snapshot.docs.map(item => ({
-          id: item.id,
-          ...item.data()
-        })));
-      },
-      error => {
-        console.error(error);
-        $("messages").textContent =
-          "Could not load messages: " + friendlyError(error);
-      }
-    );
+    messageUnsubscribe = onSnapshot(messagesQuery, snapshot => {
+      currentMessages = snapshot.docs.map(item => ({
+        id:item.id,
+        ...item.data()
+      }));
+
+      renderMessages(currentMessages);
+    }, error => {
+      console.error(error);
+      $("messages").textContent =
+        "Could not load messages: " + friendlyError(error);
+    });
 
     renderConversations();
 
-  } catch(error) {
+  } catch (error) {
     console.error(error);
     showError("Could not open chat: " + friendlyError(error));
   }
-
 }
 
 
-// UPDATE CHAT HEADER
+// CHAT HEADER
 
 function updateChatHeader() {
+  if (!currentConversation) return;
 
-  if(!currentConversation) return;
-
-  const name = conversationName(currentConversation);
+  const name = getConversationName(currentConversation);
 
   $("chatTitle").textContent = name;
-
   setAvatar($("chatAvatar"), name);
 
-  if(currentConversation.isGroup) {
+  if (currentConversation.isGroup) {
     $("chatSubtitle").textContent =
       currentMembers.length + " members";
+
+    $("blockButton").hidden = true;
   } else {
     const otherUid = getOtherMembers(currentMembers)[0];
-    const other = usersCache.find(user => user.uid === otherUid);
+    const other = getUser(otherUid);
 
-    $("chatSubtitle").textContent =
-      other?.email || "Private conversation";
+    $("chatSubtitle").textContent = "Private conversation";
+
+    $("blockButton").hidden = false;
+    $("blockButton").textContent =
+      blockedUsers.has(otherUid) ? "Unblock User" : "Block User";
+  }
+}
+
+
+// DISABLE PRIVATE MESSAGING WHEN BLOCKED
+
+function updateMessageInputState() {
+  const input = $("messageInput");
+  const button = $("messageForm").querySelector("button");
+
+  let disabled = false;
+
+  if (currentConversation && !currentConversation.isGroup) {
+    const otherUid = getOtherMembers(currentMembers)[0];
+    disabled = blockedUsers.has(otherUid);
   }
 
+  input.disabled = disabled;
+  button.disabled = disabled;
+
+  input.placeholder = disabled
+    ? "Unblock this user to send messages."
+    : "Write a message...";
 }
 
 
 // DISPLAY MESSAGES
 
 function renderMessages(messages) {
-
   const container = $("messages");
   container.replaceChildren();
 
-  if(messages.length === 0) {
+  if (messages.length === 0) {
     const empty = document.createElement("div");
     empty.className = "chat-empty";
     empty.textContent = "No messages yet. Start the conversation!";
@@ -1214,19 +1247,15 @@ function renderMessages(messages) {
   }
 
   messages.forEach(message => {
-
     const wrapper = document.createElement("div");
 
     wrapper.className = "message" +
       (message.senderId === currentUser.uid ? " mine" : "");
 
+    const sender = getUser(message.senderId);
+
     const author = document.createElement("span");
     author.className = "message-author";
-
-    const sender = usersCache.find(
-      user => user.uid === message.senderId
-    );
-
     author.textContent =
       message.senderId === currentUser.uid
         ? "You"
@@ -1234,7 +1263,36 @@ function renderMessages(messages) {
 
     const bubble = document.createElement("div");
     bubble.className = "message-bubble";
-    bubble.textContent = message.text;
+
+    const hiddenBlockedMessage =
+      currentConversation?.isGroup === true &&
+      blockedUsers.has(message.senderId) &&
+      message.senderId !== currentUser.uid;
+
+    if (hiddenBlockedMessage) {
+      bubble.textContent = "BLOCKED USER - TAP TO REVEAL";
+      bubble.style.cursor = "pointer";
+      bubble.style.color = "#ff8585";
+      bubble.setAttribute("role", "button");
+      bubble.tabIndex = 0;
+
+      const reveal = () => {
+        if (bubble.dataset.revealed === "true") return;
+        bubble.textContent = message.text;
+        bubble.dataset.revealed = "true";
+        bubble.style.color = "white";
+      };
+
+      bubble.onclick = reveal;
+      bubble.onkeydown = event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          reveal();
+        }
+      };
+    } else {
+      bubble.textContent = message.text;
+    }
 
     const time = document.createElement("span");
     time.className = "message-time";
@@ -1243,98 +1301,140 @@ function renderMessages(messages) {
 
     time.textContent = timestamp
       ? timestamp.toLocaleTimeString([], {
-          hour: "numeric",
-          minute: "2-digit"
+          hour:"numeric",
+          minute:"2-digit"
         })
       : "Sending...";
 
-    wrapper.append(author, bubble, time);
+    wrapper.append(author,bubble,time);
     container.append(wrapper);
-
   });
 
   container.scrollTop = container.scrollHeight;
-
 }
 
 
 // SEND MESSAGE
 
 $("messageForm").onsubmit = async event => {
-
   event.preventDefault();
 
   const text = $("messageInput").value.trim();
 
-  if(!text || !currentConversation) return;
+  if (!text || !currentConversation || $("messageInput").disabled) return;
 
   const conversationId = currentConversation.id;
 
-  $("messageInput").value = "";
   $("messageInput").disabled = true;
 
   try {
+    const conversationRef = doc(db,"conversations",conversationId);
+    const snapshot = await getDoc(conversationRef);
 
-    const conversationRef = doc(
-      db,
-      "conversations",
-      conversationId
-    );
-
-    const conversationSnapshot = await getDoc(conversationRef);
-
-    if(!conversationSnapshot.exists() ||
-       !conversationSnapshot.data().members.includes(currentUser.uid)) {
+    if (!snapshot.exists() ||
+        !snapshot.data().members.includes(currentUser.uid)) {
       throw new Error("You are no longer a member of this conversation.");
     }
 
     await addDoc(
-      collection(
-        db,
-        "conversations",
-        conversationId,
-        "messages"
-      ),
+      collection(db,"conversations",conversationId,"messages"),
       {
-        text: text.slice(0, 2000),
-        senderId: currentUser.uid,
-        createdAt: serverTimestamp()
+        text:text.slice(0,2000),
+        senderId:currentUser.uid,
+        createdAt:serverTimestamp()
       }
     );
 
-    await updateDoc(conversationRef, {
-      lastMessage: text.slice(0, 100),
-      lastSenderId: currentUser.uid,
-      updatedAt: serverTimestamp()
+    await updateDoc(conversationRef,{
+      lastMessage:text.slice(0,100),
+      lastSenderId:currentUser.uid,
+      updatedAt:serverTimestamp()
     });
 
-  } catch(error) {
+    $("messageInput").value = "";
 
+  } catch(error) {
     console.error(error);
     showError("Message could not be sent: " + friendlyError(error));
-
-    $("messageInput").value = text;
-
   } finally {
-    $("messageInput").disabled = false;
+    updateMessageInputState();
     $("messageInput").focus();
   }
-
 };
 
 
-// MOBILE BACK BUTTON
+// CREATE GROUP CHAT
+
+$("newGroupButton").onclick = async () => {
+  const name = prompt("Enter a name for your group:");
+
+  if (!name || !name.trim()) return;
+
+  const names = prompt(
+    "Enter usernames of the people to add, separated by commas:"
+  );
+
+  if (!names) return;
+
+  const requestedNames = names
+    .split(",")
+    .map(value => value.trim().toLowerCase())
+    .filter(Boolean);
+
+  const selectedUsers = usersCache.filter(user =>
+    requestedNames.includes(
+      (user.username || "").toLowerCase()
+    )
+  );
+
+  const members = [
+    currentUser.uid,
+    ...selectedUsers.map(user => user.uid)
+  ];
+
+  if (members.length < 2) {
+    showError("Add at least one registered user.");
+    return;
+  }
+
+  if (members.length > 20) {
+    showError("Groups are limited to 20 members.");
+    return;
+  }
+
+  if (new Set(members).size !== members.length) {
+    showError("Duplicate group members were found.");
+    return;
+  }
+
+  try {
+    const groupRef = doc(collection(db,"conversations"));
+
+    await setDoc(groupRef,{
+      name:name.trim().slice(0,50),
+      members,
+      isGroup:true,
+      createdAt:serverTimestamp(),
+      updatedAt:serverTimestamp(),
+      lastMessage:"",
+      lastSenderId:""
+    });
+
+    await openConversation(groupRef.id);
+
+  } catch(error) {
+    console.error(error);
+    showError("Could not create group: " + friendlyError(error));
+  }
+};
+
+
+// MOBILE BACK
 
 $("mobileBack").onclick = () => {
   $("app").classList.remove("show-chat");
 };
 
-
-// INITIALIZE CONVERSATION LIST
-
-window.currentConversationList = [];
-
 </script>
-
 </body>
 </html>
