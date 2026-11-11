@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -45,21 +46,41 @@ canvas{display:block;width:100%;height:auto;touch-action:none}
 .shop small{display:block;margin-top:5px;color:#c2d4e8}
 footer{color:#839bb6;font-size:12px;padding:23px 0;line-height:1.7}
 .auth-wrap{width:min(460px,calc(100% - 24px));margin:36px auto;padding:28px;background:#121e32;border:1px solid #ffffff20;border-radius:20px;box-shadow:0 20px 70px #00000030}
-.auth-wrap h2{margin:0 0 8px;font-size:27px}.auth-wrap p{color:#9fb5cc;line-height:1.6}
+.auth-wrap h2{margin:0 0 8px;font-size:27px}
+.auth-wrap p{color:#9fb5cc;line-height:1.6}
 .auth-wrap label{display:block;margin:14px 0 6px;color:#cbd9e8;font-size:13px;font-weight:650}
 .auth-wrap input{width:100%;padding:13px 14px;border:1px solid #ffffff30;border-radius:10px;background:#091426;color:#fff;font:inherit;outline:none}
-.auth-wrap input:focus{border-color:#83ebdc}.auth-wrap button{width:100%;margin-top:14px;background:#83ebdc;color:#09252d;border:0}
+.auth-wrap input:focus{border-color:#83ebdc}
+.auth-wrap button{width:100%;margin-top:14px;background:#83ebdc;color:#09252d;border:0}
 .auth-switch{background:transparent!important;color:#83ebdc!important;border:1px solid #ffffff30!important}
 .auth-error{min-height:20px;color:#ff9c9c!important;font-size:13px}
 .account-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 14px;padding:12px 16px;background:#121e32;border:1px solid #ffffff20;border-radius:14px;color:#cbd9e8}
+.account-bar>div{display:flex;gap:8px;flex-wrap:wrap}
 .leaderboard{margin:0 0 16px;padding:16px 18px;background:#121e32;border:1px solid #ffffff20;border-radius:16px}
-.leaderboard h2{margin:0 0 10px;font-size:18px}.leaderboard ol{margin:0;padding-left:24px;color:#cbd9e8}
-.leaderboard li{padding:4px 0}.leaderboard small{color:#9fb5cc}
+.leaderboard h2{margin:0 0 10px;font-size:18px}
+.leaderboard ol{margin:0;padding-left:24px;color:#cbd9e8}
+.leaderboard li{padding:4px 0}
+.leaderboard small{color:#9fb5cc}
+.admin-panel{margin-bottom:16px;padding:18px}
+.admin-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.admin-heading h2{margin:0}
+.admin-description{color:#9fb5cc;line-height:1.6}
+.admin-player{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px;margin-top:9px;background:#091426;border:1px solid #ffffff20;border-radius:12px}
+.admin-player small{display:block;color:#9fb5cc;overflow-wrap:anywhere}
+.admin-player .player-status{margin-top:4px}
+.admin-player .banned-status{color:#ff8585}
+.admin-player .active-status{color:#83ebdc}
+.admin-player button{min-width:110px}
 [hidden],.hidden{display:none!important}
 @media(max-width:550px){
-nav button{flex:1}.stats{gap:15px}.stat span{font-size:21px}
-.toolbar{padding:12px}#snowCanvas{height:66vh;min-height:440px}
-.card{padding:23px}.card p{font-size:14px}.touch{left:12px;right:12px}
+nav button{flex:1}
+.stats{gap:15px}
+.stat span{font-size:21px}
+.toolbar{padding:12px}
+#snowCanvas{height:66vh;min-height:440px}
+.card{padding:23px}
+.card p{font-size:14px}
+.touch{left:12px;right:12px}
 }
 </style>
 </head>
@@ -92,12 +113,31 @@ nav button{flex:1}.stats{gap:15px}.stat span{font-size:21px}
 <main id="gameArea" hidden>
   <div class="account-bar">
     <span>Signed in as <strong id="currentUsername"></strong> <small id="accountStatus"></small></span>
-    <button id="signOut" type="button">Sign out</button>
+    <div>
+      <button id="adminToggle" type="button" hidden>Administrator</button>
+      <button id="signOut" type="button">Sign out</button>
+    </div>
   </div>
+
+  <section id="adminPanel" class="panel admin-panel" hidden>
+    <div class="admin-heading">
+      <h2>Administrator Panel</h2>
+      <button id="adminClose" type="button">Close</button>
+    </div>
+    <p class="admin-description">
+      Manage player access. Banning an account blocks it from playing and saving through this website.
+    </p>
+    <button id="refreshPlayers" type="button">Refresh players</button>
+    <div id="adminPlayerList" style="margin-top:14px">
+      Loading players...
+    </div>
+  </section>
+
   <section class="leaderboard">
     <h2>Snow Rider Leaderboard</h2>
     <ol id="leaderboardList"><li>Loading leaderboard…</li></ol>
   </section>
+
   <nav aria-label="Choose game">
     <button id="snowTab" class="active">Snow Rider</button>
     <button id="idleTab">Idle Bricks</button>
@@ -115,9 +155,7 @@ nav button{flex:1}.stats{gap:15px}.stat span{font-size:21px}
     </div>
 
     <div class="stage">
-      <canvas id="snowCanvas" width="1100" height="680"
-        aria-label="Snow riding game"></canvas>
-
+      <canvas id="snowCanvas" width="1100" height="680" aria-label="Snow riding game"></canvas>
       <div id="snowNotice"></div>
 
       <div class="touch">
@@ -163,8 +201,7 @@ nav button{flex:1}.stats{gap:15px}.stat span{font-size:21px}
       </div>
     </div>
 
-    <canvas id="idleCanvas" width="960" height="540"
-      aria-label="Idle brick breaking game"></canvas>
+    <canvas id="idleCanvas" width="960" height="540" aria-label="Idle brick breaking game"></canvas>
 
     <div class="shop">
       <button id="buyBall">Add ball<small id="ballPrice"></small></button>
@@ -193,11 +230,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc, collection, query, orderBy,
-  limit, getDocs, serverTimestamp
+  limit, getDocs, serverTimestamp, onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCLDF3NkhA1NtC3VfbVn21pXj0Rtf_Kuh4",
+  apiKey: "AIzaSyDF3NkhA1NtC3VfbVn21pXj0Rtf_Kuh4",
   authDomain: "blockthis-5044d.firebaseapp.com",
   projectId: "blockthis-5044d",
   storageBucket: "blockthis-5044d.firebasestorage.app",
@@ -209,11 +246,13 @@ const firebaseConfig = {
 const firebaseApp=initializeApp(firebaseConfig);
 const auth=getAuth(firebaseApp);
 const db=getFirestore(firebaseApp);
+
 let activeUser=null;
 let publicUsername="";
 let cloudSaveTimer=null;
 let lastLeaderboardBest=-1;
 let isRegistering=false;
+let accountStatusUnsubscribe=null;
 
 (() => {
 "use strict";
@@ -322,12 +361,10 @@ function pointIsClear(x,z,objects,margin=.7){
   });
 }
 
-// Generate short, irregular sections instead of fixed lanes.
 function generateSection(z){
   const previous=snow.safeX;
   const next=clamp(previous+random(-1.9,1.9),-4.8,4.8);
 
-  // Keep a corridor between neighboring sections.
   const corridorMin=Math.min(previous,next)-1.05;
   const corridorMax=Math.max(previous,next)+1.05;
 
@@ -373,7 +410,6 @@ function generateSection(z){
       break;
     }
 
-    // At least one obstacle per section.
     if(!placed&&added.length===0){
       const leftRoom=corridorMin+6.2;
       const rightRoom=6.2-corridorMax;
@@ -382,8 +418,6 @@ function generateSection(z){
     }
   }
 
-  // Scatter presents independently across width and depth.
-  // Avoid placing them inside hazards or making a straight trail.
   const giftCount=Math.random()<.45?3:2;
   const localGifts=[];
 
@@ -672,8 +706,6 @@ function updateSnow(dt){
   updateSnowHud();
 }
 
-// PERSPECTIVE GRAPHICS
-
 function project(x,y,z){
   const depth=z+7;
   if(depth<=.3)return null;
@@ -711,9 +743,7 @@ function face(vertices,color){
 function ellipse(x,y,rx,ry,color){
   ctx.fillStyle=color;
   ctx.beginPath();
-  ctx.ellipse(
-    x,y,Math.max(.1,rx),Math.max(.1,ry),0,0,Math.PI*2
-  );
+  ctx.ellipse(x,y,Math.max(.1,rx),Math.max(.1,ry),0,0,Math.PI*2);
   ctx.fill();
 }
 
@@ -770,11 +800,7 @@ function drawSky(){
     const size=30+i%4*11;
 
     for(let j=0;j<4;j++){
-      ellipse(
-        x+j*size*.6,
-        y+Math.sin(j*2)*5,
-        size,size*.2,"#ffffff25"
-      );
+      ellipse(x+j*size*.6,y+Math.sin(j*2)*5,size,size*.2,"#ffffff25");
     }
   }
 
@@ -866,17 +892,9 @@ function drawTree(object){
 
   const scale=point.s*object.size;
 
-  if(
-    point.x< -scale*3 ||
-    point.x>W+scale*3 ||
-    scale<.5
-  )return;
+  if(point.x< -scale*3||point.x>W+scale*3||scale<.5)return;
 
-  ellipse(
-    point.x+scale*.45,
-    point.y+scale*.04,
-    scale*1.6,scale*.19,"#678caa23"
-  );
+  ellipse(point.x+scale*.45,point.y+scale*.04,scale*1.6,scale*.19,"#678caa23");
 
   box(
     object.x,0,object.z,
@@ -940,9 +958,7 @@ function drawTree(object){
         object.z-.2
       );
 
-      if(p){
-        ellipse(p.x,p.y,scale*.11,scale*.045,"#f9fdff");
-      }
+      if(p)ellipse(p.x,p.y,scale*.11,scale*.045,"#f9fdff");
     }
   }
 }
@@ -1007,10 +1023,7 @@ function drawRock(object){
   const point=project(x,0,z);
   if(!point)return;
 
-  ellipse(
-    point.x+point.s*.2,point.y,
-    point.s*1.1,point.s*.17,"#6486a52c"
-  );
+  ellipse(point.x+point.s*.2,point.y,point.s*1.1,point.s*.17,"#6486a52c");
 
   face([
     [x-.95,0,z-.5],[x+.85,0,z-.5],
@@ -1038,10 +1051,7 @@ function drawSnowball(object){
 
   const radius=point.s*.87;
 
-  ellipse(
-    ground.x+radius*.18,ground.y,
-    radius*1.15,radius*.26,"#597f9d40"
-  );
+  ellipse(ground.x+radius*.18,ground.y,radius*1.15,radius*.26,"#597f9d40");
 
   face([
     [object.x-.55,.014,object.z+.4],
@@ -1072,10 +1082,7 @@ function drawSnowball(object){
   ctx.strokeStyle="#8bafcc70";
   ctx.lineWidth=Math.max(1,radius*.035);
   ctx.beginPath();
-  ctx.ellipse(
-    point.x,point.y,radius*.48,radius*1.04,
-    rotation,0,Math.PI*2
-  );
+  ctx.ellipse(point.x,point.y,radius*.48,radius*1.04,rotation,0,Math.PI*2);
   ctx.stroke();
 
   for(let i=0;i<15;i++){
@@ -1120,10 +1127,7 @@ function drawGift(object){
 
   const colors=palettes[object.color||0];
 
-  ellipse(
-    ground.x,ground.y,
-    point.s*.55,point.s*.12,"#8c926c25"
-  );
+  ellipse(ground.x,ground.y,point.s*.55,point.s*.12,"#8c926c25");
 
   const glow=ctx.createRadialGradient(
     point.x,point.y,0,
@@ -1136,16 +1140,8 @@ function drawGift(object){
   ellipse(point.x,point.y,point.s*1.3,point.s*1.3,glow);
 
   box(object.x,bob,object.z,.75,.75,.75,colors);
-
-  box(
-    object.x,bob,object.z-.01,.13,.77,.78,
-    ["#ffb0a9","#e34b64","#b83954"]
-  );
-
-  box(
-    object.x,bob+.31,object.z-.01,.78,.13,.78,
-    ["#ffb0a9","#e34b64","#b83954"]
-  );
+  box(object.x,bob,object.z-.01,.13,.77,.78,["#ffb0a9","#e34b64","#b83954"]);
+  box(object.x,bob+.31,object.z-.01,.78,.13,.78,["#ffb0a9","#e34b64","#b83954"]);
 
   const top=project(object.x,bob+.86,object.z);
   if(!top)return;
@@ -1155,10 +1151,7 @@ function drawGift(object){
 
   for(const side of[-1,1]){
     ctx.beginPath();
-    ctx.ellipse(
-      top.x+side*top.s*.12,top.y,
-      top.s*.13,top.s*.07,side*-.5,0,Math.PI*2
-    );
+    ctx.ellipse(top.x+side*top.s*.12,top.y,top.s*.13,top.s*.07,side*-.5,0,Math.PI*2);
     ctx.stroke();
   }
 }
@@ -1171,11 +1164,7 @@ function drawObjects(){
 
     const point=project(object.x,0,object.z);
 
-    if(
-      !point ||
-      point.x< -point.s*4 ||
-      point.x>W+point.s*4
-    )continue;
+    if(!point||point.x< -point.s*4||point.x>W+point.s*4)continue;
 
     if(object.type==="tree")drawTree(object);
     else if(object.type==="pit")drawPit(object);
@@ -1187,12 +1176,9 @@ function drawObjects(){
 
 function drawSled(){
   const scale=Math.min(W/850,H/610);
-  const bounce=mode==="playing"&&snow.y===0?
-    Math.sin(snow.time*25)*1.2:0;
+  const bounce=mode==="playing"&&snow.y===0?Math.sin(snow.time*25)*1.2:0;
 
-  if(snow.y>0){
-    ellipse(W/2,H-15,75*scale,13*scale,"#496f8b25");
-  }
+  if(snow.y>0)ellipse(W/2,H-15,75*scale,13*scale,"#496f8b25");
 
   ctx.save();
   ctx.translate(W/2+snow.lean*13,H-52-snow.y*23+bounce);
@@ -1313,19 +1299,12 @@ function drawWeather(){
     const y=(i*73.3+snow.time*speed)%H;
     const radius=.7+i%3*.55;
 
-    ellipse(
-      x,y,radius,radius,
-      i%3?"#ffffffa0":"#ffffff60"
-    );
+    ellipse(x,y,radius,radius,i%3?"#ffffffa0":"#ffffff60");
   }
 
   for(const particle of snow.powder){
     ctx.globalAlpha=clamp(particle.life/.6,0,1);
-
-    ellipse(
-      particle.x,particle.y,
-      particle.size,particle.size*.75,"#ffffff"
-    );
+    ellipse(particle.x,particle.y,particle.size,particle.size*.75,"#ffffff");
   }
 
   ctx.globalAlpha=1;
@@ -1351,10 +1330,7 @@ function drawSnow(){
   ctx.save();
 
   if(snow.shake>.1){
-    ctx.translate(
-      random(-snow.shake/2,snow.shake/2),
-      random(-snow.shake/2,snow.shake/2)
-    );
+    ctx.translate(random(-snow.shake/2,snow.shake/2),random(-snow.shake/2,snow.shake/2));
   }
 
   drawSky();
@@ -1365,8 +1341,7 @@ function drawSnow(){
 
   ctx.restore();
 
-  $("snowNotice").textContent=
-    snow.noticeTime>0?snow.notice:"";
+  $("snowNotice").textContent=snow.noticeTime>0?snow.notice:"";
 }
 
 function bindDirection(id,direction){
@@ -1445,17 +1420,14 @@ function persistIdle(){
     balls:balls.map(ball=>({...ball})),
     bricks:bricks.map(brick=>({...brick}))
   };
+
   save("chill-combined-idle",progress);
   queueCloudSave();
 }
 
 function makeBall(){
   const angle=-Math.PI*random(.2,.8);
-
-  return{
-    x:IW/2,y:IH-60,
-    vx:Math.cos(angle),vy:Math.sin(angle)
-  };
+  return{x:IW/2,y:IH-60,vx:Math.cos(angle),vy:Math.sin(angle)};
 }
 
 function makeLevel(){
@@ -1464,7 +1436,6 @@ function makeLevel(){
   for(let row=0;row<4;row++){
     for(let col=0;col<10;col++){
       const hp=Math.ceil(idle.level*(1+row*.45));
-
       bricks.push({
         x:30+col*91,y:48+row*57,
         w:81,h:45,hp,max:hp,hue:175+row*30
@@ -1503,15 +1474,9 @@ function updateShop(){
   $("level").textContent=idle.level;
   $("ballCount").textContent=idle.count;
 
-  $("ballPrice").textContent=idle.count>=40?
-    "Maximum reached":`${ballCost().toLocaleString()} coins`;
-
-  $("powerPrice").textContent=
-    `${powerCost().toLocaleString()} coins · Damage ${idle.power}`;
-
-  $("speedPrice").textContent=idle.speed>=12?
-    "Maximum reached":
-    `${speedCost().toLocaleString()} coins · Tier ${idle.speed}`;
+  $("ballPrice").textContent=idle.count>=40?"Maximum reached":`${ballCost().toLocaleString()} coins`;
+  $("powerPrice").textContent=`${powerCost().toLocaleString()} coins · Damage ${idle.power}`;
+  $("speedPrice").textContent=idle.speed>=12?"Maximum reached":`${speedCost().toLocaleString()} coins · Tier ${idle.speed}`;
 
   $("buyBall").disabled=idle.count>=40||idle.coins<ballCost();
   $("buyPower").disabled=idle.coins<powerCost();
@@ -1520,31 +1485,25 @@ function updateShop(){
 
 $("buyBall").onclick=()=>{
   if(idle.count>=40||idle.coins<ballCost())return;
-
   idle.coins-=ballCost();
   idle.count++;
   balls.push(makeBall());
-
   updateShop();
   persistIdle();
 };
 
 $("buyPower").onclick=()=>{
   if(idle.coins<powerCost())return;
-
   idle.coins-=powerCost();
   idle.power++;
-
   updateShop();
   persistIdle();
 };
 
 $("buySpeed").onclick=()=>{
   if(idle.speed>=12||idle.coins<speedCost())return;
-
   idle.coins-=speedCost();
   idle.speed++;
-
   updateShop();
   persistIdle();
 };
@@ -1560,7 +1519,6 @@ $("resetIdle").onclick=()=>{
   idle={coins:0,level:1,count:1,power:1,speed:1};
   balls=[makeBall()];
   particles=[];
-
   makeLevel();
   updateShop();
   persistIdle();
@@ -1574,9 +1532,7 @@ idleCanvas.onpointerdown=event=>{
   const y=(event.clientY-rect.top)*IH/rect.height;
 
   const brick=bricks.find(b=>
-    b.hp>0&&
-    x>=b.x&&x<=b.x+b.w&&
-    y>=b.y&&y<=b.y+b.h
+    b.hp>0&&x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h
   );
 
   if(brick){
@@ -1597,21 +1553,10 @@ function updateIdle(dt){
       ball.x+=ball.vx*speed*step;
       ball.y+=ball.vy*speed*step;
 
-      if(ball.x<7){
-        ball.x=7;ball.vx=Math.abs(ball.vx);
-      }
-
-      if(ball.x>IW-7){
-        ball.x=IW-7;ball.vx=-Math.abs(ball.vx);
-      }
-
-      if(ball.y<7){
-        ball.y=7;ball.vy=Math.abs(ball.vy);
-      }
-
-      if(ball.y>IH-7){
-        ball.y=IH-7;ball.vy=-Math.abs(ball.vy);
-      }
+      if(ball.x<7){ball.x=7;ball.vx=Math.abs(ball.vx);}
+      if(ball.x>IW-7){ball.x=IW-7;ball.vx=-Math.abs(ball.vx);}
+      if(ball.y<7){ball.y=7;ball.vy=Math.abs(ball.vy);}
+      if(ball.y>IH-7){ball.y=IH-7;ball.vy=-Math.abs(ball.vy);}
 
       for(const brick of bricks){
         if(brick.hp<=0)continue;
@@ -1622,10 +1567,7 @@ function updateIdle(dt){
         ){
           hitBrick(brick,idle.power);
 
-          if(
-            oldX+7<=brick.x ||
-            oldX-7>=brick.x+brick.w
-          ){
+          if(oldX+7<=brick.x||oldX-7>=brick.x+brick.w){
             ball.vx*=-1;
           }else{
             ball.vy*=-1;
@@ -1680,17 +1622,11 @@ function drawIdle(){
   ic.strokeStyle="#ffffff07";
 
   for(let x=0;x<IW;x+=40){
-    ic.beginPath();
-    ic.moveTo(x,0);
-    ic.lineTo(x,IH);
-    ic.stroke();
+    ic.beginPath();ic.moveTo(x,0);ic.lineTo(x,IH);ic.stroke();
   }
 
   for(let y=0;y<IH;y+=40){
-    ic.beginPath();
-    ic.moveTo(0,y);
-    ic.lineTo(IW,y);
-    ic.stroke();
+    ic.beginPath();ic.moveTo(0,y);ic.lineTo(IW,y);ic.stroke();
   }
 
   ic.textAlign="center";
@@ -1701,17 +1637,10 @@ function drawIdle(){
     if(brick.hp<=0)continue;
 
     const light=34+14*brick.hp/brick.max;
-    const gradient=ic.createLinearGradient(
-      brick.x,brick.y,brick.x,brick.y+brick.h
-    );
+    const gradient=ic.createLinearGradient(brick.x,brick.y,brick.x,brick.y+brick.h);
 
-    gradient.addColorStop(
-      0,`hsl(${brick.hue} 70% ${light+9}%)`
-    );
-
-    gradient.addColorStop(
-      1,`hsl(${brick.hue} 65% ${light}%)`
-    );
+    gradient.addColorStop(0,`hsl(${brick.hue} 70% ${light+9}%)`);
+    gradient.addColorStop(1,`hsl(${brick.hue} 65% ${light}%)`);
 
     ic.fillStyle=gradient;
     ic.fillRect(brick.x,brick.y,brick.w,brick.h);
@@ -1723,11 +1652,7 @@ function drawIdle(){
     ic.fillRect(brick.x,brick.y+brick.h-3,brick.w,3);
 
     ic.fillStyle="white";
-    ic.fillText(
-      brick.hp,
-      brick.x+brick.w/2,
-      brick.y+brick.h/2
-    );
+    ic.fillText(brick.hp,brick.x+brick.w/2,brick.y+brick.h/2);
   }
 
   ic.shadowBlur=14;
@@ -1751,19 +1676,13 @@ function drawIdle(){
   ic.globalAlpha=1;
   ic.fillStyle="#879db9";
   ic.font="14px system-ui";
-
-  ic.fillText(
-    idlePaused?"PAUSED":"CLICK BLOCKS · BUY UPGRADES · CLEAR LEVELS",
-    IW/2,IH-24
-  );
+  ic.fillText(idlePaused?"PAUSED":"CLICK BLOCKS · BUY UPGRADES · CLEAR LEVELS",IW/2,IH-24);
 }
 
 // TABS AND MAIN LOOP
 
 function switchGame(game){
-  if(active==="snow"&&game!=="snow"&&mode==="playing"){
-    pauseSnow();
-  }
+  if(active==="snow"&&game!=="snow"&&mode==="playing")pauseSnow();
 
   active=game;
   keys.clear();
@@ -1785,19 +1704,27 @@ resetSnow();
 resizeSnow();
 
 balls=Array.isArray(stored.balls)&&stored.balls.length===idle.count?
-  stored.balls.map(ball=>({x:Number(ball.x)||IW/2,y:Number(ball.y)||IH-60,vx:Number(ball.vx)||1,vy:Number(ball.vy)||-1})):
+  stored.balls.map(ball=>({
+    x:Number(ball.x)||IW/2,
+    y:Number(ball.y)||IH-60,
+    vx:Number(ball.vx)||1,
+    vy:Number(ball.vy)||-1
+  })):
   Array.from({length:idle.count},makeBall);
+
 if(Array.isArray(stored.bricks)&&stored.bricks.length===40){
   bricks=stored.bricks.map((brick,index)=>({
     x:Number(brick.x)||30+(index%10)*91,
     y:Number(brick.y)||48+Math.floor(index/10)*57,
-    w:Number(brick.w)||81,h:Number(brick.h)||45,
+    w:Number(brick.w)||81,
+    h:Number(brick.h)||45,
     hp:Math.max(0,Number(brick.hp)||0),
-    max:Math.max(1,Number(brick.max)||1),hue:Number(brick.hue)||175
+    max:Math.max(1,Number(brick.max)||1),
+    hue:Number(brick.hue)||175
   }));
 }else makeLevel();
-updateShop();
 
+updateShop();
 addEventListener("pagehide",persistIdle);
 
 let last=performance.now();
@@ -1821,7 +1748,8 @@ function frame(now){
 
 requestAnimationFrame(frame);
 
-// ACCOUNT, CLOUD SAVES, AND PUBLIC LEADERBOARD
+// ACCOUNT, CLOUD SAVES, LEADERBOARD, AND ADMIN PANEL
+
 function showAuthError(message){
   $("authError").textContent=message||"";
 }
@@ -1850,6 +1778,7 @@ function friendlyAuthError(error){
     "auth/too-many-requests":"Too many attempts. Please wait a little and try again.",
     "auth/network-request-failed":"Network error. Check your internet connection."
   };
+
   return messages[error.code]||error.message||"Something went wrong. Please try again.";
 }
 
@@ -1858,98 +1787,160 @@ $("authToggle").onclick=()=>setAuthMode(!isRegistering);
 $("authForm").addEventListener("submit",async event=>{
   event.preventDefault();
   showAuthError("");
+
   const email=$("authEmail").value.trim();
   const password=$("authPassword").value;
   const username=$("authUsername").value.trim();
+
   if(isRegistering&&(!username||username.length<3)){
-    showAuthError("Choose a username with at least 3 characters.");return;
+    showAuthError("Choose a username with at least 3 characters.");
+    return;
   }
+
   if(isRegistering&&username.length>20){
-    showAuthError("Your username must be 20 characters or fewer.");return;
+    showAuthError("Your username must be 20 characters or fewer.");
+    return;
   }
+
   $("authSubmit").disabled=true;
+
   try{
     if(isRegistering){
       const credential=await createUserWithEmailAndPassword(auth,email,password);
       await updateProfile(credential.user,{displayName:username});
+
       await setDoc(doc(db,"users",credential.user.uid),{
-        username, idle:{coins:0,level:1,count:1,power:1,speed:1},
-        balls:[],bricks:[],snowBest:0,createdAt:serverTimestamp()
+        username,
+        idle:{coins:0,level:1,count:1,power:1,speed:1},
+        balls:[],
+        bricks:[],
+        snowBest:0,
+        createdAt:serverTimestamp()
       });
+
       await setDoc(doc(db,"leaderboard",credential.user.uid),{
-        username,snowBest:0,idleLevel:1,idleCoins:0,updatedAt:serverTimestamp()
+        username,
+        snowBest:0,
+        idleLevel:1,
+        idleCoins:0,
+        updatedAt:serverTimestamp()
       });
+
       publicUsername=username;
     }else{
       await signInWithEmailAndPassword(auth,email,password);
     }
-  }catch(error){showAuthError(friendlyAuthError(error));}
-  finally{$("authSubmit").disabled=false;}
+  }catch(error){
+    showAuthError(friendlyAuthError(error));
+  }finally{
+    $("authSubmit").disabled=false;
+  }
 });
 
 $("forgotPassword").onclick=async()=>{
   const email=$("authEmail").value.trim();
-  if(!email){showAuthError("Enter your email address first.");return;}
+
+  if(!email){
+    showAuthError("Enter your email address first.");
+    return;
+  }
+
   try{
     await sendPasswordResetEmail(auth,email);
     showAuthError("Password reset email sent. Check your inbox.");
-  }catch(error){showAuthError(friendlyAuthError(error));}
+  }catch(error){
+    showAuthError(friendlyAuthError(error));
+  }
 };
 
 $("signOut").onclick=()=>signOut(auth);
 
 async function loadLeaderboard(){
   const list=$("leaderboardList");
+
   try{
-    const leaderboardQuery=query(collection(db,"leaderboard"),orderBy("snowBest","desc"),limit(10));
+    const leaderboardQuery=query(
+      collection(db,"leaderboard"),
+      orderBy("snowBest","desc"),
+      limit(10)
+    );
+
     const snapshot=await getDocs(leaderboardQuery);
     list.replaceChildren();
+
     if(snapshot.empty){
-      const li=document.createElement("li");li.textContent="No scores yet. Be the first to set a record!";list.append(li);return;
+      const li=document.createElement("li");
+      li.textContent="No scores yet. Be the first to set a record!";
+      list.append(li);
+      return;
     }
+
     snapshot.forEach(entry=>{
       const data=entry.data();
       const li=document.createElement("li");
-      const name=document.createElement("strong");name.textContent=data.username||"Player";
-      const score=document.createElement("small");score.textContent=` — ${Math.max(0,Number(data.snowBest)||0).toLocaleString()} points`;
-      li.append(name,score);list.append(li);
+
+      const name=document.createElement("strong");
+      name.textContent=data.username||"Player";
+
+      const score=document.createElement("small");
+      score.textContent=` — ${Math.max(0,Number(data.snowBest)||0).toLocaleString()} points`;
+
+      li.append(name,score);
+      list.append(li);
     });
   }catch(error){
-    list.replaceChildren();const li=document.createElement("li");
-    li.textContent="Leaderboard unavailable. Check your Firestore setup.";list.append(li);
+    list.replaceChildren();
+
+    const li=document.createElement("li");
+    li.textContent="Leaderboard unavailable. Check your Firestore setup.";
+    list.append(li);
+
     console.error("Leaderboard error:",error);
   }
 }
 
 function queueCloudSave(){
   if(!activeUser)return;
+
   clearTimeout(cloudSaveTimer);
   cloudSaveTimer=setTimeout(saveCloudProgress,900);
 }
 
 async function saveCloudProgress(){
   if(!activeUser)return;
+
   const uid=activeUser.uid;
   const username=publicUsername||activeUser.displayName||"Player";
   const idleData={...idle};
   const ballsData=balls.map(ball=>({...ball}));
   const bricksData=bricks.map(brick=>({...brick}));
   const bestScore=Math.max(0,Number(best)||0);
+
   try{
     await Promise.all([
       setDoc(doc(db,"users",uid),{
-        username,idle:idleData,balls:ballsData,bricks:bricksData,
-        snowBest:bestScore,updatedAt:serverTimestamp()
+        username,
+        idle:idleData,
+        balls:ballsData,
+        bricks:bricksData,
+        snowBest:bestScore,
+        updatedAt:serverTimestamp()
       },{merge:true}),
+
       setDoc(doc(db,"leaderboard",uid),{
-        username,snowBest:bestScore,idleLevel:idle.level,
-        idleCoins:Math.floor(idle.coins),updatedAt:serverTimestamp()
+        username,
+        snowBest:bestScore,
+        idleLevel:idle.level,
+        idleCoins:Math.floor(idle.coins),
+        updatedAt:serverTimestamp()
       },{merge:true})
     ]);
+
     if(bestScore!==lastLeaderboardBest){
       lastLeaderboardBest=bestScore;
       await loadLeaderboard();
     }
+
     $("accountStatus").textContent="· Progress saved";
   }catch(error){
     $("accountStatus").textContent="· Save failed";
@@ -1959,15 +1950,18 @@ async function saveCloudProgress(){
 
 async function restoreCloudProgress(user){
   const snapshot=await getDoc(doc(db,"users",user.uid));
+
   if(!snapshot.exists()){
     publicUsername=user.displayName||"Player";
     await saveCloudProgress();
     return;
   }
+
   const data=snapshot.data();
   publicUsername=data.username||user.displayName||"Player";
   best=Math.max(0,Number(data.snowBest)||0);
   $("best").textContent=best;
+
   if(data.idle&&typeof data.idle==="object"){
     idle={
       coins:Math.max(0,Number(data.idle.coins)||0),
@@ -1977,36 +1971,191 @@ async function restoreCloudProgress(user){
       speed:clamp(Math.floor(Number(data.idle.speed)||1),1,12)
     };
   }
+
   balls=Array.isArray(data.balls)&&data.balls.length===idle.count?
-    data.balls.map(ball=>({x:Number(ball.x)||IW/2,y:Number(ball.y)||IH-60,vx:Number(ball.vx)||1,vy:Number(ball.vy)||-1})):
+    data.balls.map(ball=>({
+      x:Number(ball.x)||IW/2,
+      y:Number(ball.y)||IH-60,
+      vx:Number(ball.vx)||1,
+      vy:Number(ball.vy)||-1
+    })):
     Array.from({length:idle.count},makeBall);
+
   if(Array.isArray(data.bricks)&&data.bricks.length===40){
     bricks=data.bricks.map((brick,index)=>({
       x:Number(brick.x)||30+(index%10)*91,
       y:Number(brick.y)||48+Math.floor(index/10)*57,
-      w:Number(brick.w)||81,h:Number(brick.h)||45,
-      hp:Math.max(0,Number(brick.hp)||0),max:Math.max(1,Number(brick.max)||1),
+      w:Number(brick.w)||81,
+      h:Number(brick.h)||45,
+      hp:Math.max(0,Number(brick.hp)||0),
+      max:Math.max(1,Number(brick.max)||1),
       hue:Number(brick.hue)||175
     }));
-  }else makeLevel();
+  }else{
+    makeLevel();
+  }
+
   save("chill-combined-idle",{idle:{...idle},balls,bricks});
   save("chill-combined-snow-best",best);
+
   updateShop();
   await loadLeaderboard();
   lastLeaderboardBest=best;
 }
 
+// ADMINISTRATOR PANEL
+
+const ADMIN_EMAIL="jimgoldbloomyt@gmail.com";
+
+function isAdmin(user){
+  return user?.email?.toLowerCase()===ADMIN_EMAIL.toLowerCase();
+}
+
+function toggleAdminPanel(){
+  if(!isAdmin(activeUser))return;
+
+  $("adminPanel").hidden=!$("adminPanel").hidden;
+
+  if(!$("adminPanel").hidden){
+    loadAdminPlayers();
+  }
+}
+
+$("adminToggle").onclick=toggleAdminPanel;
+$("adminClose").onclick=()=>{$("adminPanel").hidden=true;};
+$("refreshPlayers").onclick=loadAdminPlayers;
+
+addEventListener("keydown",event=>{
+  if(
+    event.shiftKey&&
+    event.code==="Equal"&&
+    isAdmin(activeUser)
+  ){
+    event.preventDefault();
+    toggleAdminPanel();
+  }
+});
+
+async function loadAdminPlayers(){
+  if(!isAdmin(activeUser))return;
+
+  const container=$("adminPlayerList");
+  container.textContent="Loading players...";
+
+  try{
+    const snapshot=await getDocs(collection(db,"leaderboard"));
+    container.replaceChildren();
+
+    if(snapshot.empty){
+      container.textContent="No registered players found.";
+      return;
+    }
+
+    for(const entry of snapshot.docs){
+      const player=entry.data();
+      const uid=entry.id;
+
+      const statusSnapshot=await getDoc(doc(db,"accountStatus",uid));
+      const banned=statusSnapshot.exists()&&statusSnapshot.data().disabled===true;
+
+      const row=document.createElement("div");
+      row.className="admin-player";
+
+      const details=document.createElement("div");
+
+      const name=document.createElement("strong");
+      name.textContent=player.username||"Unknown player";
+
+      const id=document.createElement("small");
+      id.textContent="Account ID: "+uid;
+
+      const status=document.createElement("small");
+      status.className="player-status "+(banned?"banned-status":"active-status");
+      status.textContent=banned?"BANNED":"Active";
+
+      details.append(name,id,status);
+
+      const button=document.createElement("button");
+      button.textContent=banned?"Banned":"Ban account";
+      button.disabled=banned||uid===activeUser.uid;
+
+      button.onclick=async()=>{
+        if(!isAdmin(activeUser))return;
+
+        if(!confirm(
+          "Are you sure you want to ban "+(player.username||"this player")+"? They will be blocked from playing through this website."
+        ))return;
+
+        button.disabled=true;
+        button.textContent="Banning...";
+
+        try{
+          await setDoc(doc(db,"accountStatus",uid),{
+            disabled:true,
+            disabledAt:serverTimestamp(),
+            disabledBy:activeUser.uid
+          });
+
+          status.textContent="BANNED";
+          status.className="player-status banned-status";
+          button.textContent="Banned";
+        }catch(error){
+          console.error("Ban failed:",error);
+          button.disabled=false;
+          button.textContent="Ban account";
+          alert("Could not ban this account. Check your Firestore rules.");
+        }
+      };
+
+      row.append(details,button);
+      container.append(row);
+    }
+  }catch(error){
+    console.error("Admin player list failed:",error);
+    container.textContent="Could not load players. Check your Firestore rules.";
+  }
+}
+
+// AUTHENTICATION STATE AND BAN CHECK
+
 onAuthStateChanged(auth,async user=>{
   activeUser=user;
+
+  if(accountStatusUnsubscribe){
+    accountStatusUnsubscribe();
+    accountStatusUnsubscribe=null;
+  }
+
+  $("adminPanel").hidden=true;
+  $("adminToggle").hidden=!isAdmin(user);
+
   if(!user){
     publicUsername="";
     $("authScreen").hidden=false;
     $("gameArea").hidden=true;
     return;
   }
+
   $("authScreen").hidden=true;
   $("gameArea").hidden=false;
   $("currentUsername").textContent=user.displayName||"Player";
+
+  accountStatusUnsubscribe=onSnapshot(
+    doc(db,"accountStatus",user.uid),
+    async snapshot=>{
+      if(snapshot.exists()&&snapshot.data().disabled===true){
+        if(accountStatusUnsubscribe){
+          accountStatusUnsubscribe();
+          accountStatusUnsubscribe=null;
+        }
+
+        showAuthError("This account has been disabled and cannot play.");
+        await signOut(auth);
+      }
+    },
+    error=>console.error("Account status check failed:",error)
+  );
+
   try{
     await restoreCloudProgress(user);
     $("currentUsername").textContent=publicUsername;
@@ -2020,7 +2169,3 @@ onAuthStateChanged(auth,async user=>{
 </script>
 </body>
 </html>
-
-
-
-
