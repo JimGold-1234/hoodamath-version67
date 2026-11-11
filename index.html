@@ -65,7 +65,7 @@ input:focus {border-color:var(--blue)}
 }
 .error {color:var(--red);font-size:13px;margin:10px 0}
 .success {color:var(--green);font-size:13px;margin:10px 0}
-#app {display:flex;height:100vh;overflow:hidden}
+#app {display:flex;height:100vh;height:100dvh;overflow:hidden}
 .sidebar {
   width:320px;min-width:280px;background:var(--panel);
   border-right:1px solid var(--border);
@@ -73,13 +73,13 @@ input:focus {border-color:var(--blue)}
 }
 .sidebar-header {padding:20px;border-bottom:1px solid var(--border)}
 .sidebar-header .logo {font-size:29px}
-.sidebar-scroll {overflow-y:auto;flex:1}
+.sidebar-scroll {overflow-y:auto;flex:1;min-height:0}
 .sidebar-section {
   padding:15px 16px 5px;color:var(--muted);
   font-size:11px;font-weight:bold;letter-spacing:1px;
   text-transform:uppercase;
 }
-#conversationList,#userList,#requestList {padding:5px 10px}
+#conversationList {padding:5px 10px}
 .list-item {
   width:100%;border:0;background:transparent;color:white;
   padding:11px;border-radius:10px;display:flex;
@@ -136,61 +136,33 @@ input:focus {border-color:var(--blue)}
 
 /* MESSAGE THREE-DOT MENU */
 .message-more {
-  position:absolute;
-  top:18px;
-  right:-38px;
-  width:30px;
-  height:30px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border:1px solid var(--border);
-  border-radius:8px;
-  background:var(--panel);
-  color:white;
-  font-size:21px;
-  line-height:1;
-  opacity:0;
-  pointer-events:none;
-  transition:opacity .15s,background .15s;
-  z-index:5;
+  position:absolute;top:18px;right:-38px;
+  width:30px;height:30px;display:flex;
+  align-items:center;justify-content:center;
+  border:1px solid var(--border);border-radius:8px;
+  background:var(--panel);color:white;
+  font-size:21px;line-height:1;
+  opacity:0;pointer-events:none;
+  transition:opacity .15s,background .15s;z-index:5;
 }
-.message.mine .message-more {
-  right:auto;
-  left:-38px;
-}
+.message.mine .message-more {right:auto;left:-38px}
 .message:hover .message-more,
 .message.menu-open .message-more,
 .message-more:focus-visible {
-  opacity:1;
-  pointer-events:auto;
+  opacity:1;pointer-events:auto;
 }
 .message-more:hover {background:var(--panel2)}
 .message-actions {
-  position:absolute;
-  top:48px;
-  right:-8px;
-  z-index:15;
-  width:175px;
-  display:none;
-  flex-direction:column;
-  gap:3px;
-  padding:6px;
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:10px;
+  position:absolute;top:48px;right:-8px;z-index:15;
+  width:175px;display:none;flex-direction:column;
+  gap:3px;padding:6px;background:var(--panel);
+  border:1px solid var(--border);border-radius:10px;
   box-shadow:0 10px 30px #0009;
 }
-.message.mine .message-actions {
-  right:auto;
-  left:-8px;
-}
+.message.mine .message-actions {right:auto;left:-8px}
 .message.menu-open .message-actions {display:flex}
 .message-actions button {
-  width:100%;
-  text-align:left;
-  font-size:12px;
-  padding:9px 10px;
+  width:100%;text-align:left;font-size:12px;padding:9px 10px;
 }
 .message-actions button:hover {background:var(--panel2)}
 .system-message {
@@ -226,7 +198,7 @@ input:focus {border-color:var(--blue)}
 .modal-card {
   background:var(--panel);border:1px solid var(--border);
   border-radius:15px;padding:22px;width:100%;
-  max-width:650px;max-height:85vh;overflow:auto;
+  max-width:650px;max-height:85vh;max-height:85dvh;overflow:auto;
 }
 .modal-card h2 {margin-top:0}
 .modal-actions {display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -238,18 +210,119 @@ input:focus {border-color:var(--blue)}
 .admin-list {max-height:350px;overflow:auto}
 .crown {color:#ffd45c}
 
+/* FRIENDS */
+.friends-nav-button {
+  width:calc(100% - 20px);margin:10px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;padding:12px;background:var(--panel2);
+  border:1px solid var(--border);border-radius:10px;
+  color:white;font-weight:bold;text-align:left;
+}
+.friends-nav-button:hover {border-color:var(--blue)}
+.friends-nav-left {display:flex;align-items:center;gap:10px}
+.notification-dot {
+  width:10px;height:10px;border-radius:50%;
+  background:#ff4d5e;display:none;flex-shrink:0;
+  box-shadow:0 0 8px #ff4d5e88;
+}
+.notification-dot.visible {display:block}
+.friends-screen {
+  display:flex;flex-direction:column;flex:1;min-height:0;
+  overflow:hidden;
+}
+.friends-header {
+  padding:25px 28px 0;background:var(--panel);
+  border-bottom:1px solid var(--border);
+}
+.friends-header h1 {font-size:26px;margin:0 0 7px}
+.friends-header p {color:var(--muted);margin:0 0 20px;font-size:13px}
+.friends-tabs {
+  display:flex;gap:8px;overflow-x:auto;
+}
+.friends-tab {
+  flex-shrink:0;padding:12px 15px;
+  background:transparent;color:var(--muted);
+  border:0;border-bottom:2px solid transparent;
+  font-weight:bold;
+}
+.friends-tab.active {
+  color:white;border-bottom-color:var(--blue);
+}
+.friends-content {
+  flex:1;min-height:0;overflow-y:auto;padding:22px 28px;
+}
+.friends-search {max-width:600px}
+.friends-search input {margin-bottom:15px}
+.friends-list {max-width:750px}
+.friends-list .list-item {
+  background:var(--panel);border:1px solid var(--border);
+  margin-bottom:8px;padding:13px;
+}
+.friends-list .list-item:hover {background:var(--panel2)}
+.friends-empty {
+  padding:24px;text-align:center;color:var(--muted);
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:12px;
+}
+.request-card {
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:11px;padding:14px;margin-bottom:10px;
+  max-width:750px;
+}
+.request-card-top {display:flex;align-items:center;gap:11px}
+.request-card-info {min-width:0;flex:1}
+.request-card-info strong {display:block}
+.request-card-info small {color:var(--muted)}
+.request-card-actions {display:flex;gap:8px;margin-top:12px}
+.request-card-actions button {flex:1}
+.tab-count {
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:19px;height:19px;padding:0 5px;
+  border-radius:20px;background:#263650;color:#dce8fa;
+  font-size:11px;margin-left:5px;
+}
+.friends-back {display:none}
+
+@media(max-width:900px) {
+  .sidebar {width:290px;min-width:260px}
+  .friends-content {padding:20px}
+}
 @media(max-width:700px) {
+  #app {height:100vh;height:100dvh}
   .sidebar {width:100%;min-width:0}
-  .main {width:100%}
-  #app.show-chat .sidebar {display:none}
-  #app:not(.show-chat) .main {display:none}
-  #mobileBack {display:block}
+  .main {width:100%;min-width:0}
+  #app.show-chat .sidebar,
+  #app.show-main .sidebar {display:none}
+  #app:not(.show-chat):not(.show-main) .main {display:none}
+  #mobileBack,.friends-back {display:block}
   .auth-card {padding:24px}
-  .message {max-width:90%}
-  .message-more {
-    opacity:1;
-    pointer-events:auto;
+  .message {max-width:88%}
+  .message-more {opacity:1;pointer-events:auto}
+  .friends-header {padding:18px 15px 0}
+  .friends-header h1 {font-size:23px}
+  .friends-tabs {gap:2px}
+  .friends-tab {padding:12px 10px;font-size:12px}
+  .friends-content {padding:15px}
+  .chat-header {padding:12px;gap:8px}
+  #messages {padding:14px 12px}
+  .message-form {padding:10px;gap:7px}
+  .message-form button {min-width:65px}
+  .message-actions {
+    right:0;top:38px;
+    width:min(190px,70vw);
   }
+  .message.mine .message-actions {right:0;left:auto}
+  .message-more {right:0;top:-34px}
+  .message.mine .message-more {right:0;left:auto}
+  .modal {padding:10px}
+  .modal-card {padding:17px;max-height:90vh;max-height:90dvh}
+  .admin-row {align-items:flex-start;flex-direction:column}
+  .admin-row > div:last-child {display:flex;gap:7px;flex-wrap:wrap}
+  .welcome h1 {font-size:28px}
+}
+@media(min-width:701px) and (max-width:1100px) {
+  .sidebar {width:285px;min-width:250px}
+  .message {max-width:82%}
 }
 </style>
 </head>
@@ -264,8 +337,8 @@ input:focus {border-color:var(--blue)}
     <div id="loginForm">
       <h2>Welcome back</h2>
       <p style="color:var(--muted)">Sign in to your account.</p>
-      <input id="loginEmail" type="email" placeholder="Email address" autocomplete="email">
-      <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password">
+      <input id="loginEmail" type="email" placeholder="Email address" autocomplete="email" required>
+      <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password" required>
       <div id="loginError" class="error"></div>
       <button class="primary-btn" id="loginButton">Sign In</button>
       <button class="link-btn" id="forgotPassword">Forgot your password?</button>
@@ -275,9 +348,9 @@ input:focus {border-color:var(--blue)}
     <div id="registerForm" class="hidden">
       <h2>Create an account</h2>
       <p style="color:var(--muted)">Join iCom today.</p>
-      <input id="registerUsername" type="text" placeholder="Username" maxlength="24">
-      <input id="registerEmail" type="email" placeholder="Email address">
-      <input id="registerPassword" type="password" placeholder="Password (at least 8 characters)">
+      <input id="registerUsername" type="text" placeholder="Username" maxlength="24" required>
+      <input id="registerEmail" type="email" placeholder="Email address" required>
+      <input id="registerPassword" type="password" placeholder="Password (at least 8 characters)" required>
       <div id="registerError" class="error"></div>
       <button class="primary-btn" id="registerButton">Create Account</button>
       <button class="link-btn" id="showLogin">Already have an account? Sign in</button>
@@ -292,9 +365,13 @@ input:focus {border-color:var(--blue)}
       <div class="subtitle" style="margin:0">Communication made simple.</div>
     </div>
 
-    <div style="padding:13px 14px 0">
-      <input id="searchUsers" type="search" placeholder="Search usernames...">
-    </div>
+    <button id="friendsButton" class="friends-nav-button">
+      <span class="friends-nav-left">
+        <span>♧</span>
+        <span>Friends</span>
+      </span>
+      <span id="friendsNotificationDot" class="notification-dot"></span>
+    </button>
 
     <div class="sidebar-scroll">
       <div class="sidebar-section">Conversations</div>
@@ -303,13 +380,6 @@ input:focus {border-color:var(--blue)}
       <div style="padding:5px 14px">
         <button id="newGroupButton" class="secondary-btn" style="width:100%">+ New Group</button>
       </div>
-
-      <div class="sidebar-section">Discovery</div>
-      <div class="notice">Find people and send them a message request.</div>
-      <div id="userList"></div>
-
-      <div class="sidebar-section">Message Requests</div>
-      <div id="requestList"></div>
     </div>
 
     <div class="sidebar-bottom">
@@ -328,8 +398,48 @@ input:focus {border-color:var(--blue)}
     <div id="welcomeScreen" class="welcome">
       <div class="logo">i<span>Com</span></div>
       <h1>Welcome to iCom</h1>
-      <p>Select a conversation or discover someone new.</p>
+      <p>Select a conversation or open Friends to find people.</p>
     </div>
+
+    <section id="friendsScreen" class="friends-screen hidden">
+      <header class="friends-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button id="friendsBack" class="secondary-btn friends-back">Back</button>
+          <div>
+            <h1>Friends</h1>
+            <p>Find people and manage your message requests.</p>
+          </div>
+        </div>
+        <div class="friends-tabs">
+          <button class="friends-tab active" data-tab="find">Find Others</button>
+          <button class="friends-tab" data-tab="outgoing">
+            Outgoing Requests <span id="outgoingCount" class="tab-count">0</span>
+          </button>
+          <button class="friends-tab" data-tab="incoming">
+            Incoming Requests <span id="incomingCount" class="tab-count">0</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="friends-content">
+        <section id="findPanel">
+          <div class="friends-search">
+            <input id="searchUsers" type="search" placeholder="Search usernames...">
+          </div>
+          <div id="userList" class="friends-list">
+            <div class="friends-empty">Search for someone by username.</div>
+          </div>
+        </section>
+
+        <section id="outgoingPanel" class="hidden">
+          <div id="outgoingRequestsList" class="friends-list"></div>
+        </section>
+
+        <section id="incomingPanel" class="hidden">
+          <div id="incomingRequestsList" class="friends-list"></div>
+        </section>
+      </div>
+    </section>
 
     <section id="chatScreen" class="hidden" style="display:flex;flex-direction:column;flex:1;min-height:0">
       <header class="chat-header">
@@ -377,7 +487,7 @@ import {
 import {
   getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc,
   deleteDoc, addDoc, query, where, orderBy, onSnapshot,
-  serverTimestamp, writeBatch
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
 import {
@@ -385,7 +495,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBExjCanjIquYlS41uATLj8uP5AtBBfKGg",
+  apiKey: "AIzaSySyBExjCanjIquYlS41uATLj8uP5AtBBfKGg",
   authDomain: "icom-4e544.firebaseapp.com",
   projectId: "icom-4e544",
   storageBucket: "icom-4e544.firebasestorage.app",
@@ -400,6 +510,7 @@ const functions = getFunctions(firebaseApp);
 
 const $ = id => document.getElementById(id);
 const ADMIN_EMAIL = "jimgoldbloomyt@gmail.com";
+const REQUEST_EXPIRY_MS = 3 * 60 * 60 * 1000;
 
 let currentUser = null;
 let currentProfile = null;
@@ -409,10 +520,13 @@ let currentMessages = [];
 let usersCache = [];
 let conversationsCache = [];
 let incomingRequests = [];
+let outgoingRequests = [];
 let blockedUsers = new Set();
 let sentRequests = new Set();
 let hiddenMessages = new Set();
 let conversationNickname = "";
+let activeFriendsTab = "find";
+let adminPanelOpen = false;
 
 let usersUnsubscribe = null;
 let conversationsUnsubscribe = null;
@@ -450,6 +564,15 @@ function setAvatar(element, name) { element.textContent = makeAvatar(name); }
 function getOtherMembers(members) { return (members || []).filter(uid => uid !== currentUser.uid); }
 function getUser(uid) { return usersCache.find(user => user.uid === uid); }
 
+function requestIsExpired(request) {
+  const createdAt = request.createdAt?.toMillis?.();
+  return !createdAt || Date.now() - createdAt >= REQUEST_EXPIRY_MS;
+}
+
+function requestIsActive(request) {
+  return request.status === "pending" && !requestIsExpired(request);
+}
+
 function getConversationName(data) {
   if (conversationNickname) return conversationNickname;
   if (data.isGroup) return data.name || "Group chat";
@@ -475,7 +598,12 @@ function showModal(html) {
   $("modalContent").innerHTML = html;
   $("modal").classList.remove("hidden");
 }
-function closeModal() { $("modal").classList.add("hidden"); }
+
+function closeModal() {
+  $("modal").classList.add("hidden");
+  adminPanelOpen = false;
+}
+
 $("modalClose").onclick = closeModal;
 $("modal").onclick = event => {
   if (event.target === $("modal")) closeModal();
@@ -486,6 +614,7 @@ $("showRegister").onclick = () => {
   $("loginForm").classList.add("hidden");
   $("registerForm").classList.remove("hidden");
 };
+
 $("showLogin").onclick = () => {
   $("registerForm").classList.add("hidden");
   $("loginForm").classList.remove("hidden");
@@ -502,16 +631,24 @@ $("registerButton").onclick = async () => {
     $("registerError").textContent = "Username must be between 3 and 24 characters.";
     return;
   }
+
   if (!/^[a-zA-Z0-9_]+$/.test(username)) {
     $("registerError").textContent = "Usernames can only contain letters, numbers, and underscores.";
     return;
   }
+
+  if (!email) {
+    $("registerError").textContent = "Please enter an email address.";
+    return;
+  }
+
   if (password.length < 8) {
     $("registerError").textContent = "Password must be at least 8 characters.";
     return;
   }
 
   $("registerButton").disabled = true;
+
   try {
     const credential = await createUserWithEmailAndPassword(auth, email, password);
     const uid = credential.user.uid;
@@ -546,6 +683,7 @@ $("loginButton").onclick = async () => {
   }
 
   $("loginButton").disabled = true;
+
   try {
     await signInWithEmailAndPassword(auth, email, password);
   } catch (error) {
@@ -558,10 +696,12 @@ $("loginButton").onclick = async () => {
 // PASSWORD RESET
 $("forgotPassword").onclick = async () => {
   const email = $("loginEmail").value.trim();
+
   if (!email) {
     $("loginError").textContent = "Enter your email address first.";
     return;
   }
+
   try {
     await sendPasswordResetEmail(auth, email);
     $("loginError").textContent = "Password reset email sent. Check your inbox.";
@@ -576,6 +716,7 @@ $("signOutButton").onclick = () => signOut(auth);
 // AUTH STATE
 onAuthStateChanged(auth, async user => {
   cleanupListeners();
+
   currentUser = user;
   currentProfile = null;
   currentConversation = null;
@@ -585,12 +726,15 @@ onAuthStateChanged(auth, async user => {
   blockedUsers = new Set();
   sentRequests = new Set();
   incomingRequests = [];
+  outgoingRequests = [];
   hiddenMessages = new Set();
   conversationNickname = "";
 
   $("chatScreen").classList.add("hidden");
+  $("friendsScreen").classList.add("hidden");
   $("welcomeScreen").classList.remove("hidden");
-  $("app").classList.remove("show-chat");
+  $("app").classList.remove("show-chat", "show-main");
+  updateFriendsNotification();
 
   if (!user) {
     $("authScreen").classList.remove("hidden");
@@ -613,6 +757,7 @@ onAuthStateChanged(auth, async user => {
     }
 
     currentProfile = profileSnapshot.data();
+
     $("authScreen").classList.add("hidden");
     $("app").classList.remove("hidden");
     $("myUsername").textContent = currentProfile.username;
@@ -630,6 +775,51 @@ onAuthStateChanged(auth, async user => {
   }
 });
 
+// FRIENDS PAGE
+function openFriends(tab = "find") {
+  if (!currentUser) return;
+
+  $("welcomeScreen").classList.add("hidden");
+  $("chatScreen").classList.add("hidden");
+  $("friendsScreen").classList.remove("hidden");
+  $("app").classList.remove("show-chat");
+  $("app").classList.add("show-main");
+
+  setFriendsTab(tab);
+}
+
+function setFriendsTab(tab) {
+  if (!["find", "outgoing", "incoming"].includes(tab)) return;
+
+  activeFriendsTab = tab;
+
+  $("findPanel").classList.toggle("hidden", tab !== "find");
+  $("outgoingPanel").classList.toggle("hidden", tab !== "outgoing");
+  $("incomingPanel").classList.toggle("hidden", tab !== "incoming");
+
+  document.querySelectorAll(".friends-tab").forEach(button => {
+    button.classList.toggle("active", button.dataset.tab === tab);
+  });
+}
+
+$("friendsButton").onclick = () => openFriends("find");
+$("friendsBack").onclick = () => {
+  $("app").classList.remove("show-main");
+  $("friendsScreen").classList.add("hidden");
+  $("welcomeScreen").classList.remove("hidden");
+};
+
+document.querySelectorAll(".friends-tab").forEach(button => {
+  button.onclick = () => setFriendsTab(button.dataset.tab);
+});
+
+function updateFriendsNotification() {
+  const count = incomingRequests.filter(requestIsActive).length;
+  $("friendsNotificationDot").classList.toggle("visible", count > 0);
+  $("incomingCount").textContent = count;
+  $("outgoingCount").textContent = outgoingRequests.filter(requestIsActive).length;
+}
+
 // USERS
 function loadUsers() {
   usersUnsubscribe = onSnapshot(collection(db, "users"), snapshot => {
@@ -640,6 +830,7 @@ function loadUsers() {
     renderUsers();
     renderConversations();
     renderIncomingRequests();
+    renderOutgoingRequests();
 
     if (currentConversation) {
       updateChatHeader();
@@ -659,7 +850,10 @@ function renderUsers() {
   container.replaceChildren();
 
   if (!search) {
-    container.textContent = "Search by username.";
+    const empty = document.createElement("div");
+    empty.className = "friends-empty";
+    empty.textContent = "Search by username to find other iCom users.";
+    container.append(empty);
     return;
   }
 
@@ -668,7 +862,10 @@ function renderUsers() {
   );
 
   if (!filtered.length) {
-    container.textContent = "No matching users found.";
+    const empty = document.createElement("div");
+    empty.className = "friends-empty";
+    empty.textContent = "No matching users found.";
+    container.append(empty);
     return;
   }
 
@@ -701,6 +898,17 @@ function renderUsers() {
     } else if (sentRequests.has(user.uid)) {
       button.textContent = "Pending";
       button.disabled = true;
+    } else if (conversationsCache.some(conversation =>
+      !conversation.isGroup &&
+      (conversation.members || []).includes(user.uid)
+    )) {
+      button.textContent = "Message";
+      button.onclick = () => {
+        const conversation = conversationsCache.find(item =>
+          !item.isGroup && (item.members || []).includes(user.uid)
+        );
+        if (conversation) openConversation(conversation.id);
+      };
     } else {
       button.textContent = "Request";
       button.onclick = () => sendMessageRequest(user);
@@ -714,6 +922,7 @@ function renderUsers() {
 // MESSAGE REQUESTS
 async function sendMessageRequest(user) {
   if (!currentUser || !user) return;
+
   if (blockedUsers.has(user.uid)) {
     showError("Unblock this user before sending a request.");
     return;
@@ -729,24 +938,42 @@ async function sendMessageRequest(user) {
     ]);
 
     if (existing.exists()) {
-      showError("You have already sent this user a request.");
-      return;
-    }
-    if (reverse.exists() && reverse.data().status === "pending") {
-      showError("This user has already sent you a request. Check Message Requests.");
-      return;
+      const existingData = existing.data();
+
+      if (
+        existingData.status === "pending" &&
+        !requestIsExpired(existingData)
+      ) {
+        showError("You have already sent this user a request.");
+        return;
+      }
+
+      if (existingData.status === "accepted") {
+        showError("This request was already accepted.");
+        return;
+      }
+
+      // Reuse rejected or expired request documents.
+      await updateDoc(doc(db, "messageRequests", requestId), {
+        status: "pending",
+        createdAt: serverTimestamp()
+      });
+    } else {
+      await setDoc(doc(db, "messageRequests", requestId), {
+        senderId:currentUser.uid,
+        recipientId:user.uid,
+        status:"pending",
+        createdAt:serverTimestamp()
+      });
     }
 
-    await setDoc(doc(db, "messageRequests", requestId), {
-      senderId:currentUser.uid,
-      recipientId:user.uid,
-      status:"pending",
-      createdAt:serverTimestamp()
-    });
+    if (reverse.exists() && requestIsActive(reverse.data())) {
+      showError("This user has already sent you a request. Check Incoming Requests.");
+    } else {
+      alert("Message request sent!");
+    }
 
-    sentRequests.add(user.uid);
-    renderUsers();
-    alert("Message request sent!");
+    openFriends("outgoing");
   } catch (error) {
     console.error(error);
     showError("Request failed: " + friendlyError(error));
@@ -764,12 +991,13 @@ function loadIncomingRequests() {
   requestsUnsubscribe = onSnapshot(q, snapshot => {
     incomingRequests = snapshot.docs
       .map(item => ({id:item.id,...item.data()}))
-      .filter(request => request.status === "pending");
+      .filter(request => requestIsActive(request));
 
     renderIncomingRequests();
+    updateFriendsNotification();
   }, error => {
     console.error("Incoming request loading error:", error);
-    $("requestList").textContent = "Could not load requests: " + error.message;
+    $("incomingRequestsList").textContent = "Could not load requests: " + error.message;
   });
 }
 
@@ -780,47 +1008,122 @@ function loadSentRequests() {
   );
 
   sentRequestsUnsubscribe = onSnapshot(q, snapshot => {
-    sentRequests = new Set(
-      snapshot.docs
-        .filter(item => item.data().status === "pending")
-        .map(item => item.data().recipientId)
-    );
+    outgoingRequests = snapshot.docs
+      .map(item => ({id:item.id,...item.data()}))
+      .filter(request => requestIsActive(request));
+
+    sentRequests = new Set(outgoingRequests.map(request => request.recipientId));
+
     renderUsers();
-  }, error => console.error(error));
+    renderOutgoingRequests();
+    updateFriendsNotification();
+  }, error => console.error("Outgoing request loading error:", error));
 }
 
 function renderIncomingRequests() {
-  const container = $("requestList");
+  const container = $("incomingRequestsList");
   container.replaceChildren();
 
-  if (!incomingRequests.length) {
-    container.textContent = "No new requests.";
+  const requests = incomingRequests.filter(request =>
+    !blockedUsers.has(request.senderId) && requestIsActive(request)
+  );
+
+  if (!requests.length) {
+    const empty = document.createElement("div");
+    empty.className = "friends-empty";
+    empty.textContent = "You don't have any incoming requests.";
+    container.append(empty);
+    updateFriendsNotification();
     return;
   }
 
-  incomingRequests.forEach(request => {
+  requests.forEach(request => {
     const sender = getUser(request.senderId);
-    const row = document.createElement("div");
-    row.style.cssText = "padding:12px;margin:5px 0;background:#18243a;border-radius:10px";
+    const card = document.createElement("div");
+    card.className = "request-card";
+
+    const top = document.createElement("div");
+    top.className = "request-card-top";
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    setAvatar(avatar, sender?.username);
+
+    const info = document.createElement("div");
+    info.className = "request-card-info";
 
     const name = document.createElement("strong");
     name.textContent = sender?.username || "Unknown user";
 
+    const subtitle = document.createElement("small");
+    subtitle.textContent = "Wants to start a conversation";
+
+    info.append(name, subtitle);
+    top.append(avatar, info);
+
+    const actions = document.createElement("div");
+    actions.className = "request-card-actions";
+
     const accept = document.createElement("button");
     accept.className = "primary-btn";
-    accept.style.cssText = "width:100%;margin-top:10px";
     accept.textContent = "Accept";
 
     const reject = document.createElement("button");
     reject.className = "secondary-btn";
-    reject.style.cssText = "width:100%;margin-top:8px";
     reject.textContent = "Reject";
 
     accept.onclick = () => respondToRequest(request, "accepted");
     reject.onclick = () => respondToRequest(request, "rejected");
-    row.append(name, accept, reject);
-    container.append(row);
+
+    actions.append(accept, reject);
+    card.append(top, actions);
+    container.append(card);
   });
+
+  updateFriendsNotification();
+}
+
+function renderOutgoingRequests() {
+  const container = $("outgoingRequestsList");
+  container.replaceChildren();
+
+  if (!outgoingRequests.length) {
+    const empty = document.createElement("div");
+    empty.className = "friends-empty";
+    empty.textContent = "You don't have any outgoing requests.";
+    container.append(empty);
+    updateFriendsNotification();
+    return;
+  }
+
+  outgoingRequests.forEach(request => {
+    const recipient = getUser(request.recipientId);
+    const card = document.createElement("div");
+    card.className = "request-card";
+
+    const top = document.createElement("div");
+    top.className = "request-card-top";
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    setAvatar(avatar, recipient?.username);
+
+    const info = document.createElement("div");
+    info.className = "request-card-info";
+
+    const name = document.createElement("strong");
+    name.textContent = recipient?.username || "Unknown user";
+
+    const subtitle = document.createElement("small");
+    subtitle.textContent = "Request pending";
+
+    info.append(name, subtitle);
+    top.append(avatar, info);
+    card.append(top);
+    container.append(card);
+  });
+
+  updateFriendsNotification();
 }
 
 async function respondToRequest(request, status) {
@@ -828,10 +1131,15 @@ async function respondToRequest(request, status) {
   if (!["accepted","rejected"].includes(status)) return;
 
   try {
-    await callFunction("acceptMessageRequest", {
+    const result = await callFunction("acceptMessageRequest", {
       requestId:request.id,
       status
     });
+
+    if (result?.expired) {
+      showError("This request has expired. The sender can send another request.");
+      return;
+    }
 
     if (status === "accepted") {
       const conversationId = [request.senderId, request.recipientId].sort().join("_");
@@ -845,11 +1153,28 @@ async function respondToRequest(request, status) {
   }
 }
 
+// Update visible request lists as requests reach their expiration time,
+// even if Firestore has not sent another snapshot.
+setInterval(() => {
+  if (!currentUser) return;
+
+  incomingRequests = incomingRequests.filter(request => requestIsActive(request));
+  outgoingRequests = outgoingRequests.filter(request => requestIsActive(request));
+
+  sentRequests = new Set(outgoingRequests.map(request => request.recipientId));
+
+  renderIncomingRequests();
+  renderOutgoingRequests();
+  renderUsers();
+  updateFriendsNotification();
+}, 30000);
+
 // BLOCKING
 async function toggleBlock(user) {
   if (!currentUser || !user) return;
 
   const blockRef = doc(db, "users", currentUser.uid, "blocks", user.uid);
+
   try {
     if (blockedUsers.has(user.uid)) {
       if (!confirm("Unblock " + user.username + "?")) return;
@@ -869,13 +1194,16 @@ async function toggleBlock(user) {
 
 function loadBlockedUsers() {
   const q = collection(db, "users", currentUser.uid, "blocks");
+
   blocksUnsubscribe = onSnapshot(q, snapshot => {
     blockedUsers = new Set(snapshot.docs.map(item => item.id));
+
     renderUsers();
 
     incomingRequests = incomingRequests.filter(
       request => !blockedUsers.has(request.senderId)
     );
+
     renderIncomingRequests();
 
     if (currentConversation) {
@@ -904,7 +1232,9 @@ function loadConversations() {
     conversationsCache.sort((a,b) =>
       (b.updatedAt?.toMillis?.() || 0) - (a.updatedAt?.toMillis?.() || 0)
     );
+
     renderConversations();
+    renderUsers();
   }, error => {
     console.error(error);
     $("conversationList").textContent = "Could not load conversations.";
@@ -923,9 +1253,13 @@ function renderConversations() {
   conversationsCache.forEach(conversation => {
     const button = document.createElement("button");
     button.className = "list-item";
-    if (currentConversation?.id === conversation.id) button.classList.add("active");
+
+    if (currentConversation?.id === conversation.id) {
+      button.classList.add("active");
+    }
 
     const name = getConversationName(conversation);
+
     const avatar = document.createElement("div");
     avatar.className = "avatar";
     setAvatar(avatar, name);
@@ -951,16 +1285,19 @@ function renderConversations() {
 async function openConversation(conversationId) {
   try {
     const snapshot = await getDoc(doc(db, "conversations", conversationId));
+
     if (!snapshot.exists()) {
       showError("This conversation no longer exists.");
       return;
     }
 
     const data = snapshot.data();
+
     if (!(data.members || []).includes(currentUser.uid)) {
       showError("You are not a member of this conversation.");
       return;
     }
+
     if (data.activeMembers && !data.activeMembers.includes(currentUser.uid)) {
       showError("You have left this conversation.");
       return;
@@ -971,7 +1308,9 @@ async function openConversation(conversationId) {
     conversationNickname = "";
 
     $("welcomeScreen").classList.add("hidden");
+    $("friendsScreen").classList.add("hidden");
     $("chatScreen").classList.remove("hidden");
+    $("app").classList.remove("show-main");
     $("app").classList.add("show-chat");
 
     await loadConversationPreferences(conversationId);
@@ -982,6 +1321,7 @@ async function openConversation(conversationId) {
     if (hiddenUnsubscribe) hiddenUnsubscribe();
 
     const hiddenQuery = collection(db, "users", currentUser.uid, "hiddenMessages");
+
     hiddenUnsubscribe = onSnapshot(hiddenQuery, snapshot => {
       hiddenMessages = new Set(snapshot.docs.map(item => item.id));
       renderMessages(currentMessages);
@@ -1019,6 +1359,7 @@ function updateChatHeader() {
   if (!currentConversation) return;
 
   const name = getConversationName(currentConversation);
+
   $("chatTitle").textContent = name;
   setAvatar($("chatAvatar"), name);
 
@@ -1027,6 +1368,7 @@ function updateChatHeader() {
   } else {
     $("chatSubtitle").textContent = "Private conversation";
   }
+
   renderConversationMenu();
 }
 
@@ -1112,46 +1454,52 @@ function renderMessages(messages) {
       bubble.textContent = "BLOCKED USER - TAP TO REVEAL";
       bubble.style.cursor = "pointer";
       bubble.style.color = "#ff8585";
-      const reveal = () => {
+
+      bubble.onclick = () => {
         bubble.textContent = message.text || "";
         bubble.style.color = "white";
       };
-      bubble.onclick = reveal;
     } else {
       bubble.textContent = message.text || "";
     }
 
     const time = document.createElement("span");
     time.className = "message-time";
+
     const timestamp = message.createdAt?.toDate?.();
+
     time.textContent = timestamp
       ? timestamp.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})
       : "Sending...";
+
     if (message.editedAt) time.textContent += " · edited";
 
     wrapper.append(author, bubble, time);
 
-    // Three-dot menu button
     const moreButton = document.createElement("button");
     moreButton.className = "message-more";
     moreButton.type = "button";
     moreButton.textContent = "⋮";
     moreButton.title = "Message options";
     moreButton.setAttribute("aria-label", "Message options");
+    moreButton.setAttribute("aria-expanded", "false");
 
     moreButton.onclick = event => {
       event.stopPropagation();
 
       document.querySelectorAll(".message.menu-open").forEach(openMessage => {
-        if (openMessage !== wrapper) openMessage.classList.remove("menu-open");
+        if (openMessage !== wrapper) {
+          openMessage.classList.remove("menu-open");
+          openMessage.querySelector(".message-more")?.setAttribute("aria-expanded", "false");
+        }
       });
 
-      wrapper.classList.toggle("menu-open");
+      const isOpen = wrapper.classList.toggle("menu-open");
+      moreButton.setAttribute("aria-expanded", String(isOpen));
     };
 
     wrapper.append(moreButton);
 
-    // Message actions menu
     const actions = document.createElement("div");
     actions.className = "message-actions";
 
@@ -1191,11 +1539,21 @@ function renderMessages(messages) {
   container.scrollTop = container.scrollHeight;
 }
 
-// Close message menus when clicking elsewhere
+// Close message menus when clicking elsewhere or pressing Escape.
 document.addEventListener("click", event => {
   if (!event.target.closest(".message")) {
     document.querySelectorAll(".message.menu-open").forEach(message => {
       message.classList.remove("menu-open");
+      message.querySelector(".message-more")?.setAttribute("aria-expanded", "false");
+    });
+  }
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") {
+    document.querySelectorAll(".message.menu-open").forEach(message => {
+      message.classList.remove("menu-open");
+      message.querySelector(".message-more")?.setAttribute("aria-expanded", "false");
     });
   }
 });
@@ -1203,7 +1561,9 @@ document.addEventListener("click", event => {
 async function editMessage(message) {
   const nextText = prompt("Edit your message:", message.text || "");
   if (nextText === null) return;
+
   const text = nextText.trim();
+
   if (!text || text.length > 2000) {
     showError("Messages must contain 1 to 2000 characters.");
     return;
@@ -1221,6 +1581,7 @@ async function editMessage(message) {
 
 async function unsendMessage(message) {
   if (!confirm("Unsend this message for everyone?")) return;
+
   try {
     await updateDoc(
       doc(db, "conversations", currentConversation.id, "messages", message.id),
@@ -1234,6 +1595,7 @@ async function unsendMessage(message) {
 async function hideMessage(message) {
   try {
     const id = currentConversation.id + "_" + message.id;
+
     await setDoc(doc(db, "users", currentUser.uid, "hiddenMessages", id), {
       conversationId:currentConversation.id,
       messageId:message.id,
@@ -1247,7 +1609,9 @@ async function hideMessage(message) {
 // SEND MESSAGE
 $("messageForm").onsubmit = async event => {
   event.preventDefault();
+
   const text = $("messageInput").value.trim();
+
   if (!text || !currentConversation || $("messageInput").disabled) return;
 
   const conversationId = currentConversation.id;
@@ -1260,9 +1624,11 @@ $("messageForm").onsubmit = async event => {
     if (!snapshot.exists()) throw new Error("Conversation no longer exists.");
 
     const data = snapshot.data();
+
     if (!(data.members || []).includes(currentUser.uid)) {
       throw new Error("You are no longer a member of this conversation.");
     }
+
     if (data.activeMembers && !data.activeMembers.includes(currentUser.uid)) {
       throw new Error("You have left this conversation.");
     }
@@ -1303,17 +1669,21 @@ document.addEventListener("click", event => {
 function addMenuButton(container, label, action, danger = false) {
   const button = document.createElement("button");
   button.textContent = label;
+
   if (danger) button.style.color = "#ff8585";
+
   button.onclick = async () => {
     $("conversationMenu").classList.add("hidden");
     await action();
   };
+
   container.append(button);
 }
 
 function renderConversationMenu() {
   const menu = $("conversationMenu");
   menu.replaceChildren();
+
   if (!currentConversation) return;
 
   addMenuButton(menu, "Conversation ID", () => {
@@ -1325,10 +1695,12 @@ function renderConversationMenu() {
   if (currentConversation.isGroup) {
     addMenuButton(menu, "Edit Conversation Name", renameGroup);
     addMenuButton(menu, "Group Members", showGroupMembers);
+
     if (currentConversation.ownerUid === currentUser.uid) {
       addMenuButton(menu, "Transfer Ownership", transferGroupOwnership);
       addMenuButton(menu, "Delete Conversation", deleteGroup, true);
     }
+
     addMenuButton(menu, "Leave Chat", leaveConversation, true);
   } else {
     addMenuButton(menu, "Leave Chat", leaveConversation, true);
@@ -1338,6 +1710,7 @@ function renderConversationMenu() {
 async function nicknameConversation() {
   const current = conversationNickname;
   const nickname = prompt("Set a nickname visible only to you. Leave blank to remove it:", current);
+
   if (nickname === null) return;
 
   const ref = doc(
@@ -1354,8 +1727,10 @@ async function nicknameConversation() {
         nickname:nickname.trim().slice(0,50),
         updatedAt:serverTimestamp()
       });
+
       conversationNickname = nickname.trim().slice(0,50);
     }
+
     updateChatHeader();
     renderConversations();
   } catch (error) {
@@ -1378,10 +1753,13 @@ async function leaveConversation() {
 
     currentConversation = null;
     currentMessages = [];
+
     if (messageUnsubscribe) messageUnsubscribe();
+
     $("chatScreen").classList.add("hidden");
     $("welcomeScreen").classList.remove("hidden");
     $("app").classList.remove("show-chat");
+
     alert("You left the conversation.");
   } catch (error) {
     showError("Could not leave conversation: " + friendlyError(error));
@@ -1396,6 +1774,7 @@ async function renameGroup() {
   }
 
   const name = prompt("Enter the new group name:", currentConversation.name || "");
+
   if (!name || !name.trim()) return;
 
   try {
@@ -1410,9 +1789,11 @@ async function renameGroup() {
 
 function showGroupMembers() {
   const members = currentConversation.members || [];
+
   const html = members.map(uid => {
     const user = getUser(uid);
     const owner = uid === currentConversation.ownerUid;
+
     return `<div class="admin-row">
       <div>${escapeHtml(user?.username || uid)} ${owner ? "♛" : ""}<small>${escapeHtml(uid)}</small></div>
       ${currentConversation.ownerUid === currentUser.uid && uid !== currentUser.uid
@@ -1425,12 +1806,15 @@ function showGroupMembers() {
   $("modalContent").querySelectorAll("[data-kick]").forEach(button => {
     button.onclick = async () => {
       const uid = button.dataset.kick;
+
       if (!confirm("Remove this member from the group?")) return;
+
       try {
         await callFunction("kickGroupMember", {
           conversationId:currentConversation.id,
           memberUid:uid
         });
+
         closeModal();
       } catch (error) {
         showError("Could not remove member: " + friendlyError(error));
@@ -1455,11 +1839,13 @@ async function transferGroupOwnership() {
     "Enter the exact username of the new owner:\n" +
     choices.map(item => item.username).join("\n")
   );
+
   if (!choice) return;
 
   const selected = choices.find(item =>
     item.username.toLowerCase() === choice.trim().toLowerCase()
   );
+
   if (!selected) {
     showError("That username is not a group member.");
     return;
@@ -1470,6 +1856,7 @@ async function transferGroupOwnership() {
       conversationId:currentConversation.id,
       newOwnerUid:selected.uid
     });
+
     alert("Group ownership transferred.");
   } catch (error) {
     showError("Could not transfer ownership: " + friendlyError(error));
@@ -1485,6 +1872,7 @@ async function deleteGroup() {
     await callFunction("deleteGroupConversation", {
       conversationId:currentConversation.id
     });
+
     currentConversation = null;
     $("chatScreen").classList.add("hidden");
     $("welcomeScreen").classList.remove("hidden");
@@ -1497,13 +1885,16 @@ async function deleteGroup() {
 // CREATE GROUP
 $("newGroupButton").onclick = async () => {
   const name = prompt("Enter a name for your group:");
+
   if (!name || !name.trim()) return;
 
   const names = prompt("Enter usernames of the people to add, separated by commas:");
+
   if (!names) return;
 
   const requestedNames = names.split(",")
-    .map(value => value.trim().toLowerCase()).filter(Boolean);
+    .map(value => value.trim().toLowerCase())
+    .filter(Boolean);
 
   const selectedUsers = usersCache.filter(user =>
     requestedNames.includes((user.username || "").toLowerCase())
@@ -1518,6 +1909,7 @@ $("newGroupButton").onclick = async () => {
     showError("Add at least one registered user.");
     return;
   }
+
   if (members.length > 20) {
     showError("Groups are limited to 20 members.");
     return;
@@ -1525,6 +1917,7 @@ $("newGroupButton").onclick = async () => {
 
   try {
     const groupRef = doc(collection(db, "conversations"));
+
     await setDoc(groupRef, {
       name:name.trim().slice(0,50),
       members,
@@ -1535,6 +1928,7 @@ $("newGroupButton").onclick = async () => {
       lastMessage:"",
       lastSenderId:""
     });
+
     await openConversation(groupRef.id);
   } catch (error) {
     console.error(error);
@@ -1545,39 +1939,45 @@ $("newGroupButton").onclick = async () => {
 // SAFE TEXT FOR HTML MODALS
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, char => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
   })[char]);
 }
 
 // DEVELOPER PANEL
-let adminPanelOpen = false;
-
-// Reliable Shift + = shortcut
 document.addEventListener("keydown", event => {
   const isShortcut =
     event.shiftKey &&
     (event.code === "Equal" || event.key === "+" || event.key === "=");
 
   if (!isShortcut || event.repeat) return;
-  if (!currentUser || currentUser.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) return;
+
+  if (!currentUser ||
+      currentUser.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    return;
+  }
 
   event.preventDefault();
 
   if (adminPanelOpen) {
     closeModal();
-    adminPanelOpen = false;
   } else {
     openDeveloperPanel();
   }
 });
 
 async function openDeveloperPanel() {
-  if (!currentUser || currentUser.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+  if (!currentUser ||
+      currentUser.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
     showError("You are not authorized.");
     return;
   }
 
   adminPanelOpen = true;
+
   showModal(`
     <h2>iCom Developer Panel</h2>
     <p style="color:var(--muted)">Administrative tools</p>
@@ -1585,6 +1985,7 @@ async function openDeveloperPanel() {
       <button class="secondary-btn" id="adminUsers">View All Users</button>
       <button class="secondary-btn" id="adminConversations">View All Conversations</button>
       <button class="secondary-btn" id="adminDeleteConversation">Delete Conversation</button>
+      <button class="danger-btn" id="adminVoidRequests">Void All Message Requests</button>
       <button class="danger-btn" id="adminReset">Reset All Data</button>
     </div>
     <div id="adminResults" class="admin-list" style="margin-top:15px"></div>
@@ -1593,21 +1994,38 @@ async function openDeveloperPanel() {
   $("adminUsers").onclick = adminViewUsers;
   $("adminConversations").onclick = adminViewConversations;
   $("adminDeleteConversation").onclick = adminDeleteConversationPrompt;
+  $("adminVoidRequests").onclick = adminVoidAllMessageRequests;
   $("adminReset").onclick = adminResetAllData;
 }
 
-// Keep shortcut state accurate when modal is closed
-const originalCloseModal = closeModal;
-function closeAdminAwareModal() {
-  originalCloseModal();
-  adminPanelOpen = false;
-}
-$("modalClose").onclick = closeAdminAwareModal;
-$("modal").addEventListener("click", event => {
-  if (event.target === $("modal")) {
-    adminPanelOpen = false;
+async function adminVoidAllMessageRequests() {
+  if (!currentUser ||
+      currentUser.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    showError("You are not authorized.");
+    return;
   }
-});
+
+  if (!confirm("Void every message request? This will clear all incoming and outgoing requests for everyone.")) {
+    return;
+  }
+
+  const button = $("adminVoidRequests");
+  if (button) button.disabled = true;
+
+  try {
+    const result = await callFunction("adminVoidAllMessageRequests");
+
+    alert(`Successfully voided ${result.deletedCount ?? 0} message requests.`);
+
+    $("adminResults").textContent =
+      `Completed. ${result.deletedCount ?? 0} message requests were removed.`;
+  } catch (error) {
+    console.error(error);
+    showError("Could not void message requests: " + friendlyError(error));
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
 
 async function adminViewUsers() {
   const results = $("adminResults");
@@ -1622,23 +2040,29 @@ async function adminViewUsers() {
       row.className = "admin-row";
 
       const info = document.createElement("div");
+
       info.innerHTML =
         `<strong>${escapeHtml(user.username || "No username")}</strong>` +
         `<small>${escapeHtml(user.email || "No email")}</small>` +
         `<small>UserID: ${escapeHtml(user.uid)}</small>`;
 
       const actions = document.createElement("div");
+
       const disable = document.createElement("button");
       disable.className = "secondary-btn";
       disable.textContent = user.disabled ? "Re-enable" : "Suspend";
+
       disable.onclick = async () => {
         const disabled = !user.disabled;
+
         if (!confirm((disabled ? "Suspend " : "Re-enable ") + user.email + "?")) return;
+
         try {
           await callFunction("adminSetUserDisabled", {
             uid:user.uid,
             disabled
           });
+
           adminViewUsers();
         } catch (error) {
           showError(friendlyError(error));
@@ -1648,8 +2072,10 @@ async function adminViewUsers() {
       const logout = document.createElement("button");
       logout.className = "secondary-btn";
       logout.textContent = "Log out";
+
       logout.onclick = async () => {
         if (!confirm("Revoke this user's sessions?")) return;
+
         try {
           await callFunction("adminRevokeUserSessions", {uid:user.uid});
           alert("User sessions have been revoked.");
@@ -1680,6 +2106,7 @@ async function adminViewConversations() {
       row.className = "admin-row";
 
       const info = document.createElement("div");
+
       info.innerHTML =
         `<strong>${escapeHtml(conversation.name || "Private conversation")}</strong>` +
         `<small>ConversationID: ${escapeHtml(conversation.id)}</small>` +
@@ -1716,6 +2143,7 @@ async function adminViewConversation(conversationId) {
 
       const info = document.createElement("div");
       info.textContent = message.text || "[Unsent message]";
+
       const small = document.createElement("small");
       small.textContent = "Message ID: " + message.id + " | Sender: " + message.senderId;
       info.append(small);
@@ -1723,13 +2151,16 @@ async function adminViewConversation(conversationId) {
       const remove = document.createElement("button");
       remove.className = "danger-btn";
       remove.textContent = "Delete";
+
       remove.onclick = async () => {
         if (!confirm("Permanently delete this message?")) return;
+
         try {
           await callFunction("adminDeleteMessage", {
             conversationId,
             messageId:message.id
           });
+
           adminViewConversation(conversationId);
         } catch (error) {
           showError(friendlyError(error));
@@ -1746,6 +2177,7 @@ async function adminViewConversation(conversationId) {
 
 async function adminDeleteConversationPrompt() {
   const conversationId = prompt("Enter the Conversation ID:");
+
   if (!conversationId) return;
   if (!confirm("Permanently delete this conversation and its messages?")) return;
 
@@ -1763,6 +2195,7 @@ async function adminResetAllData() {
   if (!confirm("FINAL CONFIRMATION: This action cannot be undone. Continue?")) return;
 
   const confirmation = prompt('Type RESET ALL DATA to confirm:');
+
   if (confirmation !== "RESET ALL DATA") {
     showError("Reset cancelled. Confirmation did not match.");
     return;
@@ -1772,6 +2205,7 @@ async function adminResetAllData() {
     await callFunction("adminResetAllData", {
       confirmation:"RESET ALL DATA"
     });
+
     alert("The data reset was completed. You will be signed out.");
     await signOut(auth);
   } catch (error) {
@@ -1782,6 +2216,12 @@ async function adminResetAllData() {
 // MOBILE BACK
 $("mobileBack").onclick = () => {
   $("app").classList.remove("show-chat");
+  $("chatScreen").classList.add("hidden");
+  $("welcomeScreen").classList.remove("hidden");
+  currentConversation = null;
+  currentMessages = [];
+  if (messageUnsubscribe) messageUnsubscribe();
+  messageUnsubscribe = null;
 };
 </script>
 </body>
