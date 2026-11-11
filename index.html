@@ -485,11 +485,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 import {
- getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc,
-deleteDoc, addDoc, query, where, orderBy, onSnapshot,
-serverTimestamp, writeBatch
+  getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc,
+  deleteDoc, addDoc, query, where, orderBy, onSnapshot,
+  serverTimestamp, writeBatch, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-
+  
 import {
   getFunctions, httpsCallable
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
@@ -1127,48 +1127,130 @@ function renderOutgoingRequests() {
 }
 
 async function respondToRequest(request, status) {
-  if (!currentUser || request.recipientId !== currentUser.uid) return;
-  if (!["accepted","rejected"].includes(status)) return;
+  if (!currentUser || !request?.id) return;
+  if (!["accepted", "rejected"].includes(status)) return;
+
+  const uid = currentUser.uid;
+  const requestRef = doc(db, "messageRequests", request.id);
+
+  let result;
 
   try {
-    const result = await callFunction("acceptMessageRequest", {
-      requestId:request.id,
-      status
+    result = await runTransaction(db, async transaction => {
+      const snapshot = await transaction.get(requestRef);
+
+      if (!snapshot.exists()) {
+        throw new Error("This request no longer exists.");
+      }
+
+      const data = snapshot.data();
+
+      if (data.recipientId !== uid) {
+        throw new Error("You cannot respond to this request.");
+      }
+
+      if (data.status !== "pending") {
+        throw new Error("This request has already been handled.");
+      }
+
+      const createdAt = data.createdAt?.toMillis?.();
+
+      if (
+        !createdAt ||
+        Date.now() - createdAt >= REQUEST_EXPIRY_MS
+      ) {
+        throw new Error(
+          "This request has expired. Ask the sender to send another."
+        );
+      }
+
+      if (status === "rejected") {
+        transaction.update(requestRef, {
+          status: "rejected",
+          respondedAt: serverTimestamp()
+        });
+
+        return { status: "rejected" };
+      }
+
+      if (
+        typeof data.senderId !== "string" ||
+        !data.senderId ||
+        data.senderId === uid
+      ) {
+        throw new Error("This request has invalid sender information.");
+      }
+
+      const members = [data.senderId, uid].sort();
+      const conversationId = members.join("_");
+      const conversationRef = doc(
+        db,
+        "conversations",
+        conversationId
+      );
+
+      const conversationSnapshot =
+        await transaction.get(conversationRef);
+
+      if (conversationSnapshot.exists()) {
+        const existing = conversationSnapshot.data();
+
+        if (
+          existing.isGroup !== false ||
+          !Array.isArray(existing.members) ||
+          existing.members.length !== 2 ||
+          !members.every(member => existing.members.includes(member))
+        ) {
+          throw new Error(
+            "This conversation ID is already used by a different chat."
+          );
+        }
+      }
+
+      transaction.update(requestRef, {
+        status: "accepted",
+        respondedAt: serverTimestamp()
+      });
+
+      if (conversationSnapshot.exists()) {
+        transaction.update(conversationRef, {
+          activeMembers: members,
+          updatedAt: serverTimestamp()
+        });
+      } else {
+        transaction.set(conversationRef, {
+          members,
+          activeMembers: members,
+          isGroup: false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          lastMessage: "",
+          lastSenderId: ""
+        });
+      }
+
+      return {
+        status: "accepted",
+        conversationId
+      };
     });
-
-    if (result?.expired) {
-      showError("This request has expired. The sender can send another request.");
-      return;
-    }
-
-    if (status === "accepted") {
-      const conversationId = [request.senderId, request.recipientId].sort().join("_");
-      await openConversation(conversationId);
-    }
-
-    alert(status === "accepted" ? "Message request accepted!" : "Message request rejected!");
   } catch (error) {
-    console.error(error);
-    showError("Could not process request: " + friendlyError(error));
+    console.error("Responding to request failed:", error);
+
+    showError(
+      "Could not process request: " + friendlyError(error)
+    );
+
+    return;
+  }
+
+  if (result.status === "accepted") {
+    await openConversation(result.conversationId);
+  } else {
+    alert("Message request rejected.");
   }
 }
-
-// Update visible request lists as requests reach their expiration time,
-// even if Firestore has not sent another snapshot.
-setInterval(() => {
-  if (!currentUser) return;
-
-  incomingRequests = incomingRequests.filter(request => requestIsActive(request));
-  outgoingRequests = outgoingRequests.filter(request => requestIsActive(request));
-
-  sentRequests = new Set(outgoingRequests.map(request => request.recipientId));
-
-  renderIncomingRequests();
-  renderOutgoingRequests();
-  renderUsers();
-  updateFriendsNotification();
-}, 30000);
-
+  
 // BLOCKING
 async function toggleBlock(user) {
   if (!currentUser || !user) return;
