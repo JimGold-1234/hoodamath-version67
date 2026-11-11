@@ -24,6 +24,18 @@ body {
   margin:0;background:var(--bg);color:var(--text);
   font-family:Arial,sans-serif;min-height:100vh;
 }
+  import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signOut,
+  onAuthStateChanged,
+  sendEmailVerification,
+  EmailAuthProvider,
+  reauthenticateWithCredential
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+  
 button,input {font:inherit}
 button {cursor:pointer}
 button:disabled {opacity:.5;cursor:not-allowed}
