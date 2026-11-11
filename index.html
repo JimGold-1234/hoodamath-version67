@@ -119,8 +119,10 @@ input:focus {border-color:var(--blue)}
   display:flex;flex-direction:column;gap:12px;
 }
 .message {
-  max-width:min(75%,550px);display:flex;
-  flex-direction:column;align-self:flex-start;
+  max-width:min(75%,550px);
+  display:flex;flex-direction:column;
+  align-self:flex-start;
+  position:relative;
 }
 .message.mine {align-self:flex-end}
 .message-author {font-size:11px;color:var(--muted);margin-bottom:5px}
@@ -131,8 +133,66 @@ input:focus {border-color:var(--blue)}
 }
 .message.mine .message-bubble {background:var(--blue2)}
 .message-time {color:var(--muted);font-size:10px;margin-top:5px}
-.message-actions {display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
-.message-actions button {font-size:11px;padding:5px 8px}
+
+/* MESSAGE THREE-DOT MENU */
+.message-more {
+  position:absolute;
+  top:18px;
+  right:-38px;
+  width:30px;
+  height:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--panel);
+  color:white;
+  font-size:21px;
+  line-height:1;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .15s,background .15s;
+  z-index:5;
+}
+.message.mine .message-more {
+  right:auto;
+  left:-38px;
+}
+.message:hover .message-more,
+.message.menu-open .message-more,
+.message-more:focus-visible {
+  opacity:1;
+  pointer-events:auto;
+}
+.message-more:hover {background:var(--panel2)}
+.message-actions {
+  position:absolute;
+  top:48px;
+  right:-8px;
+  z-index:15;
+  width:175px;
+  display:none;
+  flex-direction:column;
+  gap:3px;
+  padding:6px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:10px;
+  box-shadow:0 10px 30px #0009;
+}
+.message.mine .message-actions {
+  right:auto;
+  left:-8px;
+}
+.message.menu-open .message-actions {display:flex}
+.message-actions button {
+  width:100%;
+  text-align:left;
+  font-size:12px;
+  padding:9px 10px;
+}
+.message-actions button:hover {background:var(--panel2)}
 .system-message {
   align-self:center;color:var(--muted);font-size:12px;
   padding:7px 12px;background:var(--panel2);border-radius:20px;
@@ -177,6 +237,7 @@ input:focus {border-color:var(--blue)}
 .admin-row small {display:block;color:var(--muted);overflow-wrap:anywhere}
 .admin-list {max-height:350px;overflow:auto}
 .crown {color:#ffd45c}
+
 @media(max-width:700px) {
   .sidebar {width:100%;min-width:0}
   .main {width:100%}
@@ -185,6 +246,10 @@ input:focus {border-color:var(--blue)}
   #mobileBack {display:block}
   .auth-card {padding:24px}
   .message {max-width:90%}
+  .message-more {
+    opacity:1;
+    pointer-events:auto;
+  }
 }
 </style>
 </head>
@@ -536,7 +601,6 @@ onAuthStateChanged(auth, async user => {
   try {
     let profileSnapshot = await getDoc(doc(db, "users", user.uid));
 
-    // Brief retry in case registration profile write is still completing.
     if (!profileSnapshot.exists()) {
       await new Promise(resolve => setTimeout(resolve, 700));
       profileSnapshot = await getDoc(doc(db, "users", user.uid));
@@ -689,7 +753,6 @@ async function sendMessageRequest(user) {
   }
 }
 
-
 function loadIncomingRequests() {
   if (!currentUser) return;
 
@@ -699,18 +762,14 @@ function loadIncomingRequests() {
   );
 
   requestsUnsubscribe = onSnapshot(q, snapshot => {
-    console.log("Incoming requests found:", snapshot.size);
-
     incomingRequests = snapshot.docs
-      .map(item => ({ id: item.id, ...item.data() }))
+      .map(item => ({id:item.id,...item.data()}))
       .filter(request => request.status === "pending");
 
     renderIncomingRequests();
-
   }, error => {
     console.error("Incoming request loading error:", error);
-    $("requestList").textContent =
-      "Could not load requests: " + error.message;
+    $("requestList").textContent = "Could not load requests: " + error.message;
   });
 }
 
@@ -769,7 +828,6 @@ async function respondToRequest(request, status) {
   if (!["accepted","rejected"].includes(status)) return;
 
   try {
-    // The backend handles reactivating an existing private conversation.
     await callFunction("acceptMessageRequest", {
       requestId:request.id,
       status
@@ -994,6 +1052,8 @@ function renderMessages(messages) {
   const container = $("messages");
   container.replaceChildren();
 
+  if (!currentConversation) return;
+
   const visibleMessages = messages.filter(message =>
     !hiddenMessages.has(currentConversation.id + "_" + message.id)
   );
@@ -1071,19 +1131,46 @@ function renderMessages(messages) {
 
     wrapper.append(author, bubble, time);
 
+    // Three-dot menu button
+    const moreButton = document.createElement("button");
+    moreButton.className = "message-more";
+    moreButton.type = "button";
+    moreButton.textContent = "⋮";
+    moreButton.title = "Message options";
+    moreButton.setAttribute("aria-label", "Message options");
+
+    moreButton.onclick = event => {
+      event.stopPropagation();
+
+      document.querySelectorAll(".message.menu-open").forEach(openMessage => {
+        if (openMessage !== wrapper) openMessage.classList.remove("menu-open");
+      });
+
+      wrapper.classList.toggle("menu-open");
+    };
+
+    wrapper.append(moreButton);
+
+    // Message actions menu
     const actions = document.createElement("div");
     actions.className = "message-actions";
 
     if (message.senderId === currentUser.uid && !message.unsent) {
       const edit = document.createElement("button");
       edit.className = "secondary-btn";
-      edit.textContent = "Edit";
-      edit.onclick = () => editMessage(message);
+      edit.textContent = "Edit message";
+      edit.onclick = () => {
+        wrapper.classList.remove("menu-open");
+        editMessage(message);
+      };
 
       const unsend = document.createElement("button");
       unsend.className = "secondary-btn";
-      unsend.textContent = "Unsend";
-      unsend.onclick = () => unsendMessage(message);
+      unsend.textContent = "Unsend message";
+      unsend.onclick = () => {
+        wrapper.classList.remove("menu-open");
+        unsendMessage(message);
+      };
 
       actions.append(edit, unsend);
     }
@@ -1091,15 +1178,27 @@ function renderMessages(messages) {
     const hide = document.createElement("button");
     hide.className = "secondary-btn";
     hide.textContent = "Delete for me";
-    hide.onclick = () => hideMessage(message);
-    actions.append(hide);
+    hide.onclick = () => {
+      wrapper.classList.remove("menu-open");
+      hideMessage(message);
+    };
 
+    actions.append(hide);
     wrapper.append(actions);
     container.append(wrapper);
   });
 
   container.scrollTop = container.scrollHeight;
 }
+
+// Close message menus when clicking elsewhere
+document.addEventListener("click", event => {
+  if (!event.target.closest(".message")) {
+    document.querySelectorAll(".message.menu-open").forEach(message => {
+      message.classList.remove("menu-open");
+    });
+  }
+});
 
 async function editMessage(message) {
   const nextText = prompt("Edit your message:", message.text || "");
@@ -1452,20 +1551,28 @@ function escapeHtml(value) {
 
 // DEVELOPER PANEL
 let adminPanelOpen = false;
-let shiftPressed = false;
 
+// Reliable Shift + = shortcut
 document.addEventListener("keydown", event => {
-  if (event.key === "Shift") shiftPressed = true;
-  if (event.key === "=" && shiftPressed && currentUser?.email === ADMIN_EMAIL) {
+  const isShortcut =
+    event.shiftKey &&
+    (event.code === "Equal" || event.key === "+" || event.key === "=");
+
+  if (!isShortcut || event.repeat) return;
+  if (!currentUser || currentUser.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) return;
+
+  event.preventDefault();
+
+  if (adminPanelOpen) {
+    closeModal();
+    adminPanelOpen = false;
+  } else {
     openDeveloperPanel();
   }
 });
-document.addEventListener("keyup", event => {
-  if (event.key === "Shift") shiftPressed = false;
-});
 
 async function openDeveloperPanel() {
-  if (!currentUser || currentUser.email !== ADMIN_EMAIL) {
+  if (!currentUser || currentUser.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
     showError("You are not authorized.");
     return;
   }
@@ -1488,6 +1595,19 @@ async function openDeveloperPanel() {
   $("adminDeleteConversation").onclick = adminDeleteConversationPrompt;
   $("adminReset").onclick = adminResetAllData;
 }
+
+// Keep shortcut state accurate when modal is closed
+const originalCloseModal = closeModal;
+function closeAdminAwareModal() {
+  originalCloseModal();
+  adminPanelOpen = false;
+}
+$("modalClose").onclick = closeAdminAwareModal;
+$("modal").addEventListener("click", event => {
+  if (event.target === $("modal")) {
+    adminPanelOpen = false;
+  }
+});
 
 async function adminViewUsers() {
   const results = $("adminResults");
