@@ -485,9 +485,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 import {
-  getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc,
-  deleteDoc, addDoc, query, where, orderBy, onSnapshot,
-  serverTimestamp
+ getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc,
+deleteDoc, addDoc, query, where, orderBy, onSnapshot,
+serverTimestamp, writeBatch
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
 import {
@@ -1998,6 +1998,7 @@ async function openDeveloperPanel() {
   $("adminReset").onclick = adminResetAllData;
 }
 
+
 async function adminVoidAllMessageRequests() {
   if (!currentUser ||
       currentUser.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
@@ -2005,7 +2006,9 @@ async function adminVoidAllMessageRequests() {
     return;
   }
 
-  if (!confirm("Void every message request? This will clear all incoming and outgoing requests for everyone.")) {
+  if (!confirm(
+    "Void every message request? This will clear all incoming and outgoing requests for everyone."
+  )) {
     return;
   }
 
@@ -2013,19 +2016,57 @@ async function adminVoidAllMessageRequests() {
   if (button) button.disabled = true;
 
   try {
-    const result = await callFunction("adminVoidAllMessageRequests");
+    // Refresh authentication and verify the developer account.
+    await currentUser.reload();
 
-    alert(`Successfully voided ${result.deletedCount ?? 0} message requests.`);
+    if (!currentUser.emailVerified) {
+      throw new Error("Your developer email must be verified.");
+    }
+
+    await currentUser.getIdToken(true);
+
+    // Retrieve all message requests.
+    const snapshot = await getDocs(
+      collection(db, "messageRequests")
+    );
+
+    const documents = snapshot.docs;
+    let deletedCount = 0;
+
+    // Firestore batches support up to 500 operations.
+    for (let i = 0; i < documents.length; i += 500) {
+      const batch = writeBatch(db);
+
+      const currentBatch = documents.slice(i, i + 500);
+
+      currentBatch.forEach(requestDoc => {
+        batch.delete(requestDoc.ref);
+      });
+
+      await batch.commit();
+
+      deletedCount += currentBatch.length;
+    }
+
+    alert(
+      `Successfully voided ${deletedCount} message requests.`
+    );
 
     $("adminResults").textContent =
-      `Completed. ${result.deletedCount ?? 0} message requests were removed.`;
+      `Completed. ${deletedCount} message requests were removed.`;
+
   } catch (error) {
-    console.error(error);
-    showError("Could not void message requests: " + friendlyError(error));
+    console.error("Admin void requests error:", error);
+
+    showError(
+      "Could not void message requests: " + friendlyError(error)
+    );
+
   } finally {
     if (button) button.disabled = false;
   }
 }
+
 
 async function adminViewUsers() {
   const results = $("adminResults");
