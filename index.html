@@ -2538,7 +2538,7 @@ async function adminViewConversation(conversationId) {
   try {
     await verifyDeveloperSession();
 
-    const data = await callFunction("adminGetConversation", {
+    const data = await callAdminApi("/admin/conversation", {
       conversationId
     });
 
@@ -2603,7 +2603,7 @@ async function adminViewConversation(conversationId) {
         try {
           await verifyDeveloperSession();
 
-          await callFunction("adminDeleteMessage", {
+          await callAdminApi("/admin/delete-message", {
             conversationId,
             messageId: message.id
           });
@@ -2794,8 +2794,8 @@ async function adminVoidAllMessageRequests() {
   try {
     await verifyDeveloperSession();
 
-    const data = await callFunction(
-      "adminVoidAllMessageRequests"
+    const data = await callAdminApi(
+      "/admin/clear-message-requests"
     );
 
     if (results && getAdminResults() === results) {
