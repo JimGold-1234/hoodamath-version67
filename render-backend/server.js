@@ -1,17 +1,28 @@
-
 const express = require("express");
 const cors = require("cors");
 const admin = require("firebase-admin");
 
 const app = express();
 
+// GitHub Pages origin (origin values must NOT include /iCom/ or a trailing path).
+const allowedOrigins = [
+  "https://jimgold-1234.github.io"
+];
+
 app.use(cors({
-  origin: [
-    "https://JimGold-1234.github.io/iCom/"
-  ],
-  methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  origin: function (origin, callback) {
+    // Allow requests without an Origin header for health checks/server-to-server use.
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("Origin not allowed by CORS."));
+  },
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 204
 }));
+
+// The cors middleware above automatically answers browser OPTIONS preflight requests.
 
 app.use(express.json({ limit: "1mb" }));
 
