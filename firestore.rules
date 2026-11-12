@@ -169,8 +169,13 @@ service cloud.firestore {
 
     // CONVERSATIONS
     match /conversations/{conversationId} {
+  allow get: if signedIn()
+    && (
+      !exists(/databases/$(database)/documents/conversations/$(conversationId))
+      || isConversationMember(conversationId)
+    );
 
-      allow read: if isConversationMember(conversationId);
+  allow list: if isConversationMember(conversationId);
 
       // Create group conversations or accepted private conversations.
       allow create: if signedIn()
