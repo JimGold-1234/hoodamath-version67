@@ -207,24 +207,36 @@ exports.acceptMessageRequest = onCall(async request => {
 // DEVELOPER: VOID ALL REQUESTS
 // ------------------------------
 
+// ------------------------------
+// DEVELOPER: VOID ALL REQUESTS
+// ------------------------------
+
 exports.adminVoidAllMessageRequests = onCall(async request => {
   requireDeveloper(request);
 
-  const snapshot = await db.collection("messageRequests").get();
+  let deletedCount = 0;
 
-  for (let i = 0; i < snapshot.docs.length; i += 500) {
+  while (true) {
+    const snapshot = await db.collection("messageRequests")
+      .limit(500)
+      .get();
+
+    if (snapshot.empty) break;
+
     const batch = db.batch();
 
-    snapshot.docs.slice(i, i + 500).forEach(document => {
+    snapshot.docs.forEach(document => {
       batch.delete(document.ref);
     });
 
     await batch.commit();
+
+    deletedCount += snapshot.size;
   }
 
   return {
     success: true,
-    deletedCount: snapshot.size
+    deletedCount
   };
 });
 
