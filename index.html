@@ -553,6 +553,8 @@ let hiddenMessages = new Set();
 let conversationNickname = "";
 let activeFriendsTab = "find";
 let adminPanelOpen = false;
+let adminNoticesCache = [];
+let adminNoticeShowingId = null;
 
 let usersUnsubscribe = null;
 let conversationsUnsubscribe = null;
@@ -561,6 +563,7 @@ let requestsUnsubscribe = null;
 let sentRequestsUnsubscribe = null;
 let blocksUnsubscribe = null;
 let hiddenUnsubscribe = null;
+let adminNoticesUnsubscribe = null;
 
 // Render backend API. The backend verifies every Firebase ID token.
 const ADMIN_API_BASE = "https://icom-backend-3e0f.onrender.com";
@@ -679,29 +682,238 @@ function cleanupListeners() {
   [
     usersUnsubscribe, conversationsUnsubscribe, messageUnsubscribe,
     requestsUnsubscribe, sentRequestsUnsubscribe, blocksUnsubscribe,
-    hiddenUnsubscribe
+    hiddenUnsubscribe, adminNoticesUnsubscribe
   ].forEach(unsubscribe => {
     if (unsubscribe) unsubscribe();
   });
 
   usersUnsubscribe = conversationsUnsubscribe = messageUnsubscribe = null;
   requestsUnsubscribe = sentRequestsUnsubscribe = blocksUnsubscribe = null;
-  hiddenUnsubscribe = null;
+  hiddenUnsubscribe = adminNoticesUnsubscribe = null;
+  adminNoticesCache = [];
+  adminNoticeShowingId = null;
 }
 
 function showModal(html) {
   $("modalContent").innerHTML = html;
+  $("modalClose").textContent = "Close";
+  $("modalClose").onclick = closeModal;
   $("modal").classList.remove("hidden");
 }
 
 function closeModal() {
   $("modal").classList.add("hidden");
+  $("modalClose").textContent = "Close";
+  $("modalClose").onclick = closeModal;
   adminPanelOpen = false;
+  showNextAdminNotice();
+}
+
+function askOptionalReason({
+  title,
+  description,
+  confirmLabel,
+  requireConfirmation = false
+}) {
+  return new Promise(resolve => {
+    // Use a separate overlay so the Developer Panel and its event handlers
+    // remain intact behind the reason prompt.
+    const overlay = document.createElement("div");
+    overlay.className = "modal";
+    overlay.style.zIndex = "60";
+
+    const card = document.createElement("div");
+    card.className = "modal-card";
+
+    const heading = document.createElement("h2");
+    heading.textContent = title;
+
+    const explanation = document.createElement("p");
+    explanation.style.color = "var(--muted)";
+    explanation.textContent = description;
+
+    const reasonLabel = document.createElement("label");
+    reasonLabel.textContent = "Reason (optional)";
+
+    const reasonInput = document.createElement("textarea");
+    reasonInput.rows = 3;
+    reasonInput.maxLength = 500;
+    reasonInput.placeholder = "Enter a reason, or leave this blank.";
+    reasonInput.style.width = "100%";
+    reasonInput.style.boxSizing = "border-box";
+
+    card.append(heading, explanation, reasonLabel, reasonInput);
+
+    let confirmationInput = null;
+    if (requireConfirmation) {
+      const confirmationLabel = document.createElement("label");
+      confirmationLabel.textContent = "Type RESET ALL DATA to confirm";
+      confirmationInput = document.createElement("input");
+      confirmationInput.type = "text";
+      confirmationInput.autocomplete = "off";
+      confirmationInput.placeholder = "RESET ALL DATA";
+      confirmationInput.style.width = "100%";
+      confirmationInput.style.boxSizing = "border-box";
+      card.append(confirmationLabel, confirmationInput);
+    }
+
+    const errorText = document.createElement("p");
+    errorText.className = "notice";
+    errorText.style.color = "var(--red)";
+    card.append(errorText);
+
+    const actions = document.createElement("div");
+    actions.className = "modal-actions";
+
+    const cancel = document.createElement("button");
+    cancel.className = "secondary-btn";
+    cancel.textContent = "Cancel";
+
+    const proceed = document.createElement("button");
+    proceed.className = "danger-btn";
+    proceed.textContent = confirmLabel;
+
+    actions.append(cancel, proceed);
+    card.append(actions);
+    overlay.append(card);
+    document.body.append(overlay);
+
+    const finish = value => {
+      overlay.remove();
+      resolve(value);
+    };
+
+    cancel.onclick = () => finish(null);
+    overlay.onclick = event => {
+      if (event.target === overlay) finish(null);
+    };
+
+    proceed.onclick = () => {
+      const confirmation = confirmationInput
+        ? confirmationInput.value
+        : "";
+
+      if (requireConfirmation && confirmation !== "RESET ALL DATA") {
+        errorText.textContent =
+          "The confirmation must match exactly: RESET ALL DATA";
+        return;
+      }
+
+      finish({
+        reason: reasonInput.value.trim(),
+        confirmation
+      });
+    };
+
+    reasonInput.focus();
+  });
+}
+
+function loadAdminNotices() {
+  if (!currentUser) return;
+
+  const noticesRef = collection(db, "users", currentUser.uid, "adminNotices");
+  adminNoticesUnsubscribe = onSnapshot(noticesRef, snapshot => {
+    adminNoticesCache = snapshot.docs
+      .map(item => ({ id: item.id, ...item.data() }))
+      .sort((a, b) =>
+        (a.createdAt?.toMillis?.() || 0) -
+        (b.createdAt?.toMillis?.() || 0)
+      );
+    showNextAdminNotice();
+  }, error => {
+    console.error("Admin notice loading error:", error);
+  });
+}
+
+function showNextAdminNotice() {
+  if (
+    !currentUser ||
+    adminPanelOpen ||
+    adminNoticeShowingId ||
+    !$("modal").classList.contains("hidden")
+  ) return;
+
+  const notice = adminNoticesCache[0];
+  if (!notice) return;
+
+  adminNoticeShowingId = notice.id;
+  showModal(`
+    <h2 id="adminNoticeTitle">Conversation Removed by Administrator</h2>
+    <p id="adminNoticeSummary"></p>
+    <div style="background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px;margin:14px 0">
+      <strong>Reason</strong>
+      <p id="adminNoticeReason" style="margin:7px 0 0;white-space:pre-wrap;overflow-wrap:anywhere"></p>
+    </div>
+    <div class="modal-actions">
+      <button class="primary-btn" id="adminNoticeAction"></button>
+    </div>
+  `);
+
+  $("adminNoticeSummary").textContent = notice.isGroup
+    ? `The group conversation “${notice.conversationName || "Group chat"}” was removed by an administrator.`
+    : "Your private conversation was removed by an administrator. The accepted connection has been revoked.";
+  $("adminNoticeReason").textContent = notice.reason || "No reason was provided.";
+
+  const action = $("adminNoticeAction");
+  action.textContent = notice.isGroup
+    ? "Open Friends"
+    : "Send a New Request to Start a New Chat";
+
+  action.onclick = async () => {
+    if (notice.isGroup) {
+      acknowledgeAdminNotice(notice.id, () => openFriends("find"));
+      return;
+    }
+
+    try {
+      let profile = getUser(notice.otherUid);
+      if (!profile && notice.otherUid) {
+        const profileSnapshot = await getDoc(doc(db, "users", notice.otherUid));
+        if (profileSnapshot.exists()) {
+          profile = { uid: notice.otherUid, ...profileSnapshot.data() };
+        }
+      }
+
+      if (!profile) {
+        showError("That user profile could not be found. Open Friends to find them.");
+        return;
+      }
+
+      acknowledgeAdminNotice(notice.id, () => sendMessageRequest(profile));
+    } catch (error) {
+      showError("Could not start a new request: " + friendlyError(error));
+    }
+  };
+
+  $("modalClose").textContent = "Got it";
+  $("modalClose").onclick = () => acknowledgeAdminNotice(notice.id);
+}
+
+async function acknowledgeAdminNotice(noticeId, afterAcknowledge) {
+  try {
+    await deleteDoc(doc(db, "users", currentUser.uid, "adminNotices", noticeId));
+    adminNoticesCache = adminNoticesCache.filter(notice => notice.id !== noticeId);
+    adminNoticeShowingId = null;
+    $("modal").classList.add("hidden");
+    $("modalClose").textContent = "Close";
+    $("modalClose").onclick = closeModal;
+    if (typeof afterAcknowledge === "function") await afterAcknowledge();
+    showNextAdminNotice();
+  } catch (error) {
+    showError("Could not dismiss this notice: " + friendlyError(error));
+  }
 }
 
 $("modalClose").onclick = closeModal;
 $("modal").onclick = event => {
-  if (event.target === $("modal")) closeModal();
+  if (event.target !== $("modal")) return;
+
+  if (adminNoticeShowingId) {
+    acknowledgeAdminNotice(adminNoticeShowingId);
+  } else {
+    closeModal();
+  }
 };
 
 // AUTH SCREENS
@@ -824,6 +1036,8 @@ onAuthStateChanged(auth, async user => {
   outgoingRequests = [];
   hiddenMessages = new Set();
   conversationNickname = "";
+  adminNoticesCache = [];
+  adminNoticeShowingId = null;
 
   $("chatScreen").classList.add("hidden");
   $("friendsScreen").classList.add("hidden");
@@ -864,6 +1078,7 @@ onAuthStateChanged(auth, async user => {
     loadIncomingRequests();
     loadSentRequests();
     loadBlockedUsers();
+    loadAdminNotices();
   } catch (error) {
     console.error(error);
     showError("Could not load your account: " + friendlyError(error));
@@ -1393,6 +1608,11 @@ function loadBlockedUsers() {
 
 // CONVERSATIONS
 function loadConversations() {
+  if (!currentUser) return;
+
+  const container = $("conversationList");
+  container.textContent = "Loading conversations...";
+
   const q = query(
     collection(db, "conversations"),
     where("members", "array-contains", currentUser.uid)
@@ -1413,8 +1633,9 @@ function loadConversations() {
     renderConversations();
     renderUsers();
   }, error => {
-    console.error(error);
-    $("conversationList").textContent = "Could not load conversations.";
+    console.error("Conversation sidebar loading error:", error);
+    $("conversationList").textContent =
+      "Could not load conversations: " + friendlyError(error);
   });
 }
 
@@ -2602,13 +2823,15 @@ async function adminViewConversations() {
       remove.textContent = "Delete";
 
       remove.onclick = async () => {
-        if (!confirm(
-          "Permanently delete this conversation and all its messages?\n\n" +
-          "Conversation ID: " + conversation.id + "\n\n" +
-          "This cannot be undone."
-        )) {
-          return;
-        }
+        const decision = await askOptionalReason({
+          title: "Delete Conversation",
+          description:
+            "This permanently deletes the conversation and its messages. " +
+            "For private chats, the accepted connection will be revoked so either person can send a new request. " +
+            "For group chats, only the group will be deleted. Conversation ID: " + conversation.id,
+          confirmLabel: "Delete Conversation"
+        });
+        if (!decision) return;
 
         remove.disabled = true;
 
@@ -2616,7 +2839,8 @@ async function adminViewConversations() {
           await verifyDeveloperSession();
 
           await callAdminApi("/admin/delete-conversation", {
-            conversationId: conversation.id
+            conversationId: conversation.id,
+            reason: decision.reason
           });
 
           await adminViewConversations();
@@ -2754,7 +2978,6 @@ async function adminViewConversation(conversationId) {
 async function adminDeleteConversationById() {
   const input = $("adminConversationId");
   const button = $("adminDeleteConversation");
-
   const conversationId = input?.value.trim();
 
   if (!conversationId) {
@@ -2762,13 +2985,15 @@ async function adminDeleteConversationById() {
     return;
   }
 
-  if (!confirm(
-    "Are you sure you want to permanently delete this conversation?\n\n" +
-    "Conversation ID: " + conversationId + "\n\n" +
-    "All messages will also be deleted. This cannot be undone."
-  )) {
-    return;
-  }
+  const decision = await askOptionalReason({
+    title: "Delete Conversation",
+    description:
+      "This permanently deletes the conversation and its messages. " +
+      "Private-chat connections will be revoked; group-chat friendships will remain unchanged. " +
+      "Conversation ID: " + conversationId,
+    confirmLabel: "Delete Conversation"
+  });
+  if (!decision) return;
 
   button.disabled = true;
 
@@ -2776,7 +3001,8 @@ async function adminDeleteConversationById() {
     await verifyDeveloperSession();
 
     await callAdminApi("/admin/delete-conversation", {
-      conversationId
+      conversationId,
+      reason: decision.reason
     });
 
     if (currentConversation?.id === conversationId) {
@@ -2784,15 +3010,12 @@ async function adminDeleteConversationById() {
     }
 
     input.value = "";
-
-    alert("Conversation successfully deleted.");
-
+    alert("Conversation successfully deleted. A notice was sent to its members.");
     await adminViewConversations();
 
   } catch (error) {
     showError(
-      "Could not delete conversation: " +
-      friendlyError(error)
+      "Could not delete conversation: " + friendlyError(error)
     );
   } finally {
     button.disabled = false;
@@ -2801,33 +3024,20 @@ async function adminDeleteConversationById() {
 
 
 async function adminResetAllCommunicationData() {
-  if (!confirm(
-    "WARNING: THIS WILL DELETE ALL COMMUNICATION DATA.\n\n" +
-    "This includes:\n" +
-    "- All conversations\n" +
-    "- All messages\n" +
-    "- All message requests\n" +
-    "- All user blocks\n" +
-    "- All hidden messages\n" +
-    "- All conversation preferences\n\n" +
-    "User accounts and profile documents will remain.\n\n" +
-    "This action CANNOT be undone."
-  )) {
-    return;
-  }
+  const decision = await askOptionalReason({
+    title: "Reset All Communication Data",
+    description:
+      "This permanently deletes all conversations, messages, message requests, blocks, hidden messages, and conversation preferences. " +
+      "User accounts and profiles will remain. A removal notice will be sent to members of each conversation. " +
+      "The reason is optional.",
+    confirmLabel: "Reset All Data",
+    requireConfirmation: true
+  });
 
-  const confirmation = prompt(
-    'To confirm, type exactly: RESET ALL DATA'
-  );
-
-  if (confirmation !== "RESET ALL DATA") {
-    alert("Reset cancelled. The confirmation did not match.");
-    return;
-  }
+  if (!decision) return;
 
   const button = $("adminResetData");
   const results = getAdminResults();
-
   button.disabled = true;
 
   if (results) {
@@ -2838,38 +3048,35 @@ async function adminResetAllCommunicationData() {
     await verifyDeveloperSession();
 
     const data = await callAdminApi("/admin/reset-all-data", {
-      confirmation: "RESET ALL DATA"
+      confirmation: "RESET ALL DATA",
+      reason: decision.reason
     });
 
     adminCloseCurrentConversation();
-
     conversationsCache = [];
     incomingRequests = [];
     outgoingRequests = [];
-
+    sentRequests = new Set();
     renderConversations();
+    renderIncomingRequests();
+    renderOutgoingRequests();
+    renderUsers();
 
     if (results && getAdminResults() === results) {
-      results.textContent =
-        data.message ||
+      results.textContent = data.message ||
         "Communication data was successfully reset.";
     }
 
-    alert("All communication data has been cleared.");
+    alert("All communication data has been cleared. Conversation members will see a notice when they next sign in.");
 
   } catch (error) {
     console.error("Communication reset failed:", error);
-
     showError(
-      "Could not reset communication data: " +
-      friendlyError(error)
+      "Could not reset communication data: " + friendlyError(error)
     );
-
     if (results && getAdminResults() === results) {
-      results.textContent =
-        "Reset failed: " + friendlyError(error);
+      results.textContent = "Reset failed: " + friendlyError(error);
     }
-
   } finally {
     button.disabled = false;
   }
@@ -2914,8 +3121,8 @@ async function adminVoidAllMessageRequests() {
   try {
     await verifyDeveloperSession();
 
-    const data = await callFunction(
-      "adminVoidAllMessageRequests"
+    const data = await callAdminApi(
+      "/admin/clear-message-requests"
     );
 
     if (results && getAdminResults() === results) {
@@ -2951,3 +3158,4 @@ $("mobileBack").onclick = () => {
 </script>
 </body>
 </html>
+
