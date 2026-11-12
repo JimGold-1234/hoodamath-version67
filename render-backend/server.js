@@ -113,6 +113,98 @@ app.post("/admin/conversations", requireDeveloper, async (req, res) => {
   }
 });
 
+// VIEW MESSAGES IN ONE CONVERSATION
+app.post("/admin/conversation", requireDeveloper, async (req, res) => {
+  try {
+    const conversationId = requireString(
+      req.body?.conversationId,
+      "conversation ID"
+    );
+
+    const conversationRef = db.collection("conversations").doc(conversationId);
+    const conversationSnapshot = await conversationRef.get();
+
+    if (!conversationSnapshot.exists) {
+      return res.status(404).json({ error: "Conversation not found." });
+    }
+
+    const messagesSnapshot = await conversationRef
+      .collection("messages")
+      .orderBy("createdAt", "asc")
+      .limit(500)
+      .get();
+
+    const messages = messagesSnapshot.docs.map(document => {
+      const data = document.data();
+
+      return {
+        id: document.id,
+        text: typeof data.text === "string" ? data.text : "",
+        senderId: typeof data.senderId === "string" ? data.senderId : "",
+        unsent: data.unsent === true
+      };
+    });
+
+    res.json({ messages });
+  } catch (error) {
+    console.error("View conversation error:", error);
+    res.status(error.status || 500).json({
+      error: error.status ? error.message : "Unable to load conversation messages."
+    });
+  }
+});
+
+// DELETE ONE MESSAGE
+app.post("/admin/delete-message", requireDeveloper, async (req, res) => {
+  try {
+    const conversationId = requireString(
+      req.body?.conversationId,
+      "conversation ID"
+    );
+    const messageId = requireString(req.body?.messageId, "message ID");
+
+    const conversationRef = db.collection("conversations").doc(conversationId);
+    const conversationSnapshot = await conversationRef.get();
+
+    if (!conversationSnapshot.exists) {
+      return res.status(404).json({ error: "Conversation not found." });
+    }
+
+    const messageRef = conversationRef.collection("messages").doc(messageId);
+    const messageSnapshot = await messageRef.get();
+
+    if (!messageSnapshot.exists) {
+      return res.status(404).json({ error: "Message not found." });
+    }
+
+    await messageRef.delete();
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Delete message error:", error);
+    res.status(error.status || 500).json({
+      error: error.status ? error.message : "Unable to delete message."
+    });
+  }
+});
+
+// CLEAR ALL MESSAGE REQUESTS
+app.post("/admin/clear-message-requests", requireDeveloper, async (req, res) => {
+  try {
+    const requestsRef = db.collection("messageRequests");
+    const snapshot = await requestsRef.get();
+    const deletedCount = snapshot.size;
+
+    if (deletedCount > 0) {
+      await db.recursiveDelete(requestsRef);
+    }
+
+    res.json({ success: true, deletedCount });
+  } catch (error) {
+    console.error("Clear message requests error:", error);
+    res.status(500).json({ error: "Unable to clear message requests." });
+  }
+});
+
 // DELETE ONE CONVERSATION
 app.post("/admin/delete-conversation", requireDeveloper, async (req, res) => {
   try {
