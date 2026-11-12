@@ -7,7 +7,7 @@ const app = express();
 
 app.use(cors({
   origin: [
-    "https://JimGold-1234.github.io"
+    "https://JimGold-1234.github.io/iCom/"
   ],
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type", "Authorization"]
