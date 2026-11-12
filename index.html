@@ -146,21 +146,26 @@ input:focus {border-color:var(--blue)}
   transition:opacity .15s,background .15s;z-index:5;
 }
 .message.mine .message-more {right:auto;left:-38px}
+/* Desktop: reveal the button only while hovering beside the button. */
 .message:hover .message-more,
+.message-more:hover,
 .message.menu-open .message-more,
 .message-more:focus-visible {
   opacity:1;pointer-events:auto;
 }
 .message-more:hover {background:var(--panel2)}
 .message-actions {
-  position:absolute;top:48px;right:-8px;z-index:15;
-  width:175px;display:none;flex-direction:column;
+  position:fixed;top:0;left:0;right:auto;z-index:50;
+  width:175px;max-width:calc(100vw - 24px);
+  max-height:calc(100dvh - 24px);overflow-y:auto;
+  display:none;flex-direction:column;
   gap:3px;padding:6px;background:var(--panel);
   border:1px solid var(--border);border-radius:10px;
   box-shadow:0 10px 30px #0009;
 }
-.message.mine .message-actions {right:auto;left:-8px}
 .message.menu-open .message-actions {display:flex}
+/* On touchscreens, tapping a message reveals its options button. */
+.message.show-more .message-more {opacity:1;pointer-events:auto}
 .message-actions button {
   width:100%;text-align:left;font-size:12px;padding:9px 10px;
 }
@@ -178,10 +183,21 @@ input:focus {border-color:var(--blue)}
 .message-form button {min-width:75px}
 #mobileBack {display:none}
 .notice {color:var(--muted);font-size:12px;padding:8px 12px}
-.menu-wrap {position:relative}
+.menu-wrap {position:relative;flex-shrink:0}
+#conversationMenuButton {
+  opacity:0;pointer-events:none;
+  transition:opacity .15s;
+}
+.menu-wrap:hover #conversationMenuButton,
+.menu-wrap:focus-within #conversationMenuButton,
+.menu-wrap.menu-open #conversationMenuButton,
+.chat-header.menu-button-visible #conversationMenuButton {
+  opacity:1;pointer-events:auto;
+}
 .menu-panel {
-  position:absolute;right:0;top:43px;z-index:10;
-  width:230px;background:var(--panel);
+  position:fixed;left:0;top:0;right:auto;z-index:50;
+  width:230px;max-width:calc(100vw - 24px);
+  max-height:calc(100dvh - 24px);overflow-y:auto;background:var(--panel);
   border:1px solid var(--border);border-radius:10px;
   padding:7px;box-shadow:0 10px 30px #0008;
 }
@@ -191,6 +207,15 @@ input:focus {border-color:var(--blue)}
   padding:10px;border-radius:7px;
 }
 .menu-panel button:hover {background:var(--panel2)}
+
+@media (hover: none) {
+  .message:hover .message-more {opacity:0;pointer-events:none}
+  .message.show-more .message-more,
+  .message.menu-open .message-more {opacity:1;pointer-events:auto}
+  .menu-wrap:hover #conversationMenuButton {opacity:0;pointer-events:none}
+  .chat-header.menu-button-visible #conversationMenuButton,
+  .menu-wrap.menu-open #conversationMenuButton {opacity:1;pointer-events:auto}
+}
 .modal {
   position:fixed;inset:0;background:#000b;z-index:30;
   display:flex;align-items:center;justify-content:center;padding:18px;
@@ -297,7 +322,6 @@ input:focus {border-color:var(--blue)}
   #mobileBack,.friends-back {display:block}
   .auth-card {padding:24px}
   .message {max-width:88%}
-  .message-more {opacity:1;pointer-events:auto}
   .friends-header {padding:18px 15px 0}
   .friends-header h1 {font-size:23px}
   .friends-tabs {gap:2px}
@@ -1604,6 +1628,19 @@ function renderMessages(messages) {
 
     wrapper.append(author, bubble, time);
 
+    // On touchscreens, tapping a message reveals its three-dot button.
+    wrapper.addEventListener("click", event => {
+      if (
+        window.matchMedia("(hover: none)").matches
+        && !event.target.closest(".message-more, .message-actions")
+      ) {
+        document.querySelectorAll(".message.show-more").forEach(item => {
+          if (item !== wrapper) item.classList.remove("show-more");
+        });
+        wrapper.classList.add("show-more");
+      }
+    });
+
     const moreButton = document.createElement("button");
     moreButton.className = "message-more";
     moreButton.type = "button";
@@ -1624,6 +1661,7 @@ function renderMessages(messages) {
 
       const isOpen = wrapper.classList.toggle("menu-open");
       moreButton.setAttribute("aria-expanded", String(isOpen));
+      if (isOpen) positionFloatingMenu(actions, moreButton, wrapper.classList.contains("mine"));
     };
 
     wrapper.append(moreButton);
@@ -1673,6 +1711,9 @@ document.addEventListener("click", event => {
     document.querySelectorAll(".message.menu-open").forEach(message => {
       message.classList.remove("menu-open");
       message.querySelector(".message-more")?.setAttribute("aria-expanded", "false");
+    });
+    document.querySelectorAll(".message.show-more").forEach(message => {
+      message.classList.remove("show-more");
     });
   }
 });
@@ -1783,15 +1824,69 @@ $("messageForm").onsubmit = async event => {
   }
 };
 
+// POSITION DROPDOWN MENUS SO THEY STAY INSIDE THE VISIBLE SCREEN.
+function positionFloatingMenu(menu, anchor, alignRight = true) {
+  const anchorRect = anchor.getBoundingClientRect();
+  menu.style.visibility = "hidden";
+  menu.style.display = "flex";
+  const menuRect = menu.getBoundingClientRect();
+  const margin = 12;
+  let left = alignRight
+    ? anchorRect.right - menuRect.width
+    : anchorRect.left;
+  left = Math.max(margin, Math.min(left, window.innerWidth - menuRect.width - margin));
+
+  let top = anchorRect.bottom + 6;
+  if (top + menuRect.height > window.innerHeight - margin) {
+    top = anchorRect.top - menuRect.height - 6;
+  }
+  top = Math.max(margin, Math.min(top, window.innerHeight - menuRect.height - margin));
+
+  menu.style.left = left + "px";
+  menu.style.top = top + "px";
+  menu.style.visibility = "visible";
+  menu.style.display = "";
+}
+
 // CONVERSATION MENU
-$("conversationMenuButton").onclick = () => {
-  $("conversationMenu").classList.toggle("hidden");
+const conversationMenuButton = $("conversationMenuButton");
+const conversationMenu = $("conversationMenu");
+
+conversationMenuButton.onclick = event => {
+  event.stopPropagation();
+  const willOpen = conversationMenu.classList.contains("hidden");
+  conversationMenu.classList.toggle("hidden", !willOpen);
+  conversationMenuButton.parentElement.classList.toggle("menu-open", willOpen);
+  if (willOpen) positionFloatingMenu(conversationMenu, conversationMenuButton, true);
 };
+
+// On touchscreens, tap the conversation header to reveal the menu button.
+const chatHeader = document.querySelector(".chat-header");
+chatHeader.addEventListener("click", event => {
+  if (!window.matchMedia("(hover: none)").matches) return;
+  if (event.target.closest(".menu-wrap, button")) return;
+  chatHeader.classList.add("menu-button-visible");
+});
 
 document.addEventListener("click", event => {
   if (!event.target.closest(".menu-wrap")) {
-    $("conversationMenu").classList.add("hidden");
+    conversationMenu.classList.add("hidden");
+    conversationMenuButton.parentElement.classList.remove("menu-open");
+    if (window.matchMedia("(hover: none)").matches && !event.target.closest(".chat-header")) {
+      chatHeader.classList.remove("menu-button-visible");
+    }
   }
+});
+
+window.addEventListener("resize", () => {
+  if (!conversationMenu.classList.contains("hidden")) {
+    positionFloatingMenu(conversationMenu, conversationMenuButton, true);
+  }
+  document.querySelectorAll(".message.menu-open").forEach(message => {
+    const menu = message.querySelector(".message-actions");
+    const button = message.querySelector(".message-more");
+    if (menu && button) positionFloatingMenu(menu, button, message.classList.contains("mine"));
+  });
 });
 
 function addMenuButton(container, label, action, danger = false) {
@@ -2538,7 +2633,7 @@ async function adminViewConversation(conversationId) {
   try {
     await verifyDeveloperSession();
 
-    const data = await callAdminApi("/admin/conversation", {
+    const data = await callFunction("adminGetConversation", {
       conversationId
     });
 
@@ -2603,7 +2698,7 @@ async function adminViewConversation(conversationId) {
         try {
           await verifyDeveloperSession();
 
-          await callAdminApi("/admin/delete-message", {
+          await callFunction("adminDeleteMessage", {
             conversationId,
             messageId: message.id
           });
@@ -2794,8 +2889,8 @@ async function adminVoidAllMessageRequests() {
   try {
     await verifyDeveloperSession();
 
-    const data = await callAdminApi(
-      "/admin/clear-message-requests"
+    const data = await callFunction(
+      "adminVoidAllMessageRequests"
     );
 
     if (results && getAdminResults() === results) {
