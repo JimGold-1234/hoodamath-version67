@@ -81,6 +81,92 @@ function sendError(res, error, fallback) {
   });
 }
 
+function normalizeRemovalReason(value) {
+  if (typeof value !== "string") return "No reason was provided.";
+  const reason = value.trim().slice(0, 500);
+  return reason || "No reason was provided.";
+}
+
+async function createAdminRemovalNotices(conversations, reason) {
+  let batch = db.batch();
+  let writeCount = 0;
+
+  async function commitBatch() {
+    if (writeCount > 0) {
+      await batch.commit();
+      batch = db.batch();
+      writeCount = 0;
+    }
+  }
+
+  for (const conversation of conversations) {
+    const data = conversation.data || {};
+    const members = Array.isArray(data.members)
+      ? [...new Set(data.members.filter(uid => typeof uid === "string" && uid))]
+      : [];
+    const isGroup = data.isGroup === true;
+    const conversationName = isGroup
+      ? (data.name || "Group chat")
+      : "Private conversation";
+
+    for (const uid of members) {
+      const noticeRef = db.collection("users").doc(uid)
+        .collection("adminNotices").doc();
+      const otherUid = !isGroup && members.length === 2
+        ? members.find(memberUid => memberUid !== uid)
+        : null;
+
+      batch.set(noticeRef, {
+        type: "conversation_removed",
+        conversationId: conversation.id,
+        conversationName,
+        isGroup,
+        otherUid: otherUid || null,
+        reason: normalizeRemovalReason(reason),
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      writeCount++;
+
+      if (writeCount >= 450) await commitBatch();
+    }
+  }
+
+  await commitBatch();
+}
+
+async function revokePrivateConversationAcceptance(conversation) {
+  const data = conversation.data || {};
+  const members = Array.isArray(data.members) ? data.members : [];
+  if (data.isGroup === true || members.length !== 2) return;
+
+  const [firstUid, secondUid] = members;
+  const requestRefs = [
+    db.collection("messageRequests").doc(firstUid + "_" + secondUid),
+    db.collection("messageRequests").doc(secondUid + "_" + firstUid)
+  ];
+  const snapshots = await Promise.all(requestRefs.map(ref => ref.get()));
+  const batch = db.batch();
+  let updates = 0;
+
+  snapshots.forEach((snapshot, index) => {
+    if (!snapshot.exists) return;
+    const request = snapshot.data() || {};
+    if (
+      ["accepted", "pending"].includes(request.status) &&
+      members.includes(request.senderId) &&
+      members.includes(request.recipientId)
+    ) {
+      batch.update(requestRefs[index], {
+        status: "rejected",
+        respondedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      updates++;
+    }
+  });
+
+  if (updates > 0) await batch.commit();
+}
+
 app.get("/", (req, res) => {
   res.json({ success: true, service: "iCom Backend", status: "online" });
 });
@@ -284,8 +370,23 @@ app.post("/admin/delete-conversation", requireSignedIn, requireDeveloper, async 
     if (!snapshot.exists) {
       return res.status(404).json({ error: "Conversation not found." });
     }
+
+    const conversation = { id: snapshot.id, data: snapshot.data() || {} };
+    const reason = normalizeRemovalReason(req.body?.reason);
+
+    // Removing a private chat rejects both directions of any active request so
+    // either person can send a fresh request. Group friendships are untouched.
+    await revokePrivateConversationAcceptance(conversation);
+    await createAdminRemovalNotices([conversation], reason);
     await db.recursiveDelete(ref);
-    return res.json({ success: true });
+
+    return res.json({
+      success: true,
+      isGroup: conversation.data.isGroup === true,
+      notifiedMembers: Array.isArray(conversation.data.members)
+        ? conversation.data.members.length
+        : 0
+    });
   } catch (error) {
     return sendError(res, error, "Unable to delete conversation.");
   }
@@ -298,6 +399,16 @@ app.post("/admin/reset-all-data", requireSignedIn, requireDeveloper, async (req,
         error: 'Exact confirmation "RESET ALL DATA" is required.'
       });
     }
+
+    const reason = normalizeRemovalReason(req.body?.reason);
+    const conversationsSnapshot = await db.collection("conversations").get();
+    const conversations = conversationsSnapshot.docs.map(document => ({
+      id: document.id,
+      data: document.data() || {}
+    }));
+
+    // Preserve a notice for each affected member before removing the chats.
+    await createAdminRemovalNotices(conversations, reason);
 
     await db.recursiveDelete(db.collection("conversations"));
     await db.recursiveDelete(db.collection("messageRequests"));
