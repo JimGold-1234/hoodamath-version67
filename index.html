@@ -521,10 +521,6 @@ import {
   reauthenticateWithCredential
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
   
-import {
-  getFunctions, httpsCallable
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-functions.js";
-
 const firebaseConfig = {
   apiKey: "AIzaSyDcdW3iFlFPkWX-UqszDm8P-9LD4SQGkds",
   authDomain: "icom-4e544.firebaseapp.com",
@@ -537,7 +533,6 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
-const functions = getFunctions(firebaseApp);
 
 const $ = id => document.getElementById(id);
 const ADMIN_EMAIL = "jimgoldbloomyt@gmail.com";
@@ -567,20 +562,14 @@ let sentRequestsUnsubscribe = null;
 let blocksUnsubscribe = null;
 let hiddenUnsubscribe = null;
 
-const callFunction = async (name, data = {}) => {
-  const callable = httpsCallable(functions, name);
-  const result = await callable(data);
-  return result.data;
-};
-
-// Render backend API — used for developer-only administrative actions.
+// Render backend API. The backend verifies every Firebase ID token.
 const ADMIN_API_BASE = "https://icom-backend-3e0f.onrender.com";
 
-async function callAdminApi(path, data = {}) {
+async function callBackendApi(path, data = {}) {
   const user = auth.currentUser;
 
   if (!user) {
-    throw new Error("You must be signed in to use the developer tools.");
+    throw new Error("You must be signed in to use this action.");
   }
 
   const idToken = await user.getIdToken();
@@ -611,6 +600,42 @@ async function callAdminApi(path, data = {}) {
 
   return result;
 }
+
+async function callAdminApi(path, data = {}) {
+  return callBackendApi(path, data);
+}
+
+// Compatibility wrapper for the old callable-function names. These now use
+// the Render API, so the frontend no longer loads Firebase Cloud Functions.
+const callFunction = async (name, data = {}) => {
+  const adminRoutes = {
+    adminGetConversation: "/admin/conversation",
+    adminDeleteMessage: "/admin/delete-message",
+    adminVoidAllMessageRequests: "/admin/clear-message-requests"
+  };
+
+  if (adminRoutes[name]) {
+    return callBackendApi(adminRoutes[name], data);
+  }
+
+  const actions = {
+    leaveGroupConversation: "leave",
+    leavePrivateConversation: "leave",
+    renameGroupConversation: "rename",
+    kickGroupMember: "kick",
+    transferGroupOwnership: "transfer",
+    deleteGroupConversation: "delete"
+  };
+
+  if (!actions[name]) {
+    throw new Error("This action is not supported by the iCom backend.");
+  }
+
+  return callBackendApi("/conversations/action", {
+    ...data,
+    action: actions[name]
+  });
+};
 
 function friendlyError(error) {
   const errors = {
