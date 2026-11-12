@@ -2257,48 +2257,97 @@ async function openDeveloperPanel() {
       }
 
       showModal(`
-        <h2>iCom Developer Panel</h2>
+        showModal(`
+  <h2>iCom Developer Panel</h2>
 
-        <p style="color:var(--muted)">
-          Firestore administration. Lists show up to
-          ${ADMIN_PAGE_SIZE} records at a time.
-        </p>
+  <p style="color:var(--muted)">
+    Manage users, conversations, and communication data.
+  </p>
 
-        <div class="modal-actions">
-          <button class="secondary-btn" id="adminUsers">
-            View User Profiles
-          </button>
+  <div class="modal-actions">
+    <button class="secondary-btn" id="adminUsers">
+      View User Profiles
+    </button>
 
-          <button class="secondary-btn" id="adminConversations">
-            View Conversations
-          </button>
+    <button class="secondary-btn" id="adminConversations">
+      View Conversations
+    </button>
 
-          <button class="danger-btn" id="adminVoidRequests">
-            Clear Message Requests
-          </button>
-        </div>
+    <button class="danger-btn" id="adminVoidRequests">
+      Clear Message Requests
+    </button>
+  </div>
 
-        <p class="notice">
-          Account suspension, session revocation, full resets,
-          and whole-conversation deletion are not available here.
-        </p>
+  <hr style="border-color:var(--border);margin:18px 0">
 
-        <div
-          id="adminResults"
-          class="admin-list"
-          style="margin-top:15px"
-        >
-          Select a tool above.
-        </div>
-      `);
+  <h3>Delete Conversation</h3>
 
+  <p style="color:var(--muted)">
+    Enter the exact Conversation ID to permanently delete
+    that conversation and its messages.
+  </p>
+
+  <input
+    id="adminConversationId"
+    type="text"
+    placeholder="Enter Conversation ID"
+    autocomplete="off"
+  >
+
+  <button
+    class="danger-btn"
+    id="adminDeleteConversation"
+    style="width:100%"
+  >
+    Delete Conversation
+  </button>
+
+  <hr style="border-color:var(--border);margin:18px 0">
+
+  <h3>Communication Data Reset</h3>
+
+  <p style="color:var(--muted)">
+    This permanently deletes conversations, messages,
+    message requests, blocks, hidden messages, and
+    conversation preferences.
+  </p>
+
+  <p class="notice">
+    User accounts, public profiles, and private account
+    documents will be preserved.
+  </p>
+
+  <button
+    class="danger-btn"
+    id="adminResetData"
+    style="width:100%"
+  >
+    Clear All Communication Data
+  </button>
+
+  <div
+    id="adminResults"
+    class="admin-list"
+    style="margin-top:15px"
+  >
+    Select a tool above.
+  </div>
+`);
       adminPanelOpen = true;
 
-      $("adminUsers").onclick = adminViewUsers;
-      $("adminConversations").onclick =
-        adminViewConversations;
-      $("adminVoidRequests").onclick =
-        adminVoidAllMessageRequests;
+     $("adminUsers").onclick = adminViewUsers;
+
+$("adminConversations").onclick =
+  adminViewConversations;
+
+$("adminVoidRequests").onclick =
+  adminVoidAllMessageRequests;
+
+$("adminDeleteConversation").onclick =
+  adminDeleteConversationById;
+
+$("adminResetData").onclick =
+  adminResetAllCommunicationData;
     } catch (error) {
       console.error("Developer verification failed:", error);
 
@@ -2371,56 +2420,88 @@ async function adminViewConversations() {
   try {
     await verifyDeveloperSession();
 
-    const snapshot = await getDocs(
-      query(
-        collection(db, "conversations"),
-        limit(ADMIN_PAGE_SIZE)
-      )
-    );
+    const data = await callFunction("adminListConversations");
 
     if (getAdminResults() !== results) return;
 
+    const conversations = data.conversations || [];
+
     results.replaceChildren();
 
-    if (snapshot.empty) {
+    if (!conversations.length) {
       results.textContent = "No conversations found.";
       return;
     }
 
-    snapshot.docs.forEach(conversation => {
-      const data = conversation.data();
-
+    conversations.forEach(conversation => {
       const row = makeAdminRow(
-        data.isGroup
-          ? data.name || "Unnamed group"
+        conversation.isGroup
+          ? conversation.name || "Unnamed group"
           : "Private conversation",
         [
           "Conversation ID: " + conversation.id,
-          "Members: " + (data.members || []).length
+          "Members: " + (conversation.members || []).length
         ]
       );
 
       const view = document.createElement("button");
       view.className = "secondary-btn";
       view.textContent = "View Messages";
-      view.onclick = () => adminViewConversation(conversation.id);
 
-      row.append(view);
+      view.onclick = () =>
+        adminViewConversation(conversation.id);
+
+      const remove = document.createElement("button");
+      remove.className = "danger-btn";
+      remove.textContent = "Delete";
+
+      remove.onclick = async () => {
+        if (!confirm(
+          "Permanently delete this conversation and all its messages?\n\n" +
+          "Conversation ID: " + conversation.id + "\n\n" +
+          "This cannot be undone."
+        )) {
+          return;
+        }
+
+        remove.disabled = true;
+
+        try {
+          await verifyDeveloperSession();
+
+          await callFunction("adminDeleteConversation", {
+            conversationId: conversation.id
+          });
+
+          await adminViewConversations();
+        } catch (error) {
+          showError(
+            "Could not delete conversation: " +
+            friendlyError(error)
+          );
+
+          remove.disabled = false;
+        }
+      };
+
+      row.append(view, remove);
       results.append(row);
     });
 
     const note = document.createElement("p");
     note.className = "notice";
     note.textContent =
-      `Showing up to ${ADMIN_PAGE_SIZE} conversations.`;
+      "Showing " + conversations.length + " conversations.";
 
     results.append(note);
+
   } catch (error) {
     if (getAdminResults() === results) {
       showAdminFailure(error);
     }
   }
 }
+
 
 async function adminViewConversation(conversationId) {
   const results = getAdminResults();
@@ -2431,13 +2512,9 @@ async function adminViewConversation(conversationId) {
   try {
     await verifyDeveloperSession();
 
-    const snapshot = await getDocs(
-      query(
-        collection(db, "conversations", conversationId, "messages"),
-        orderBy("createdAt", "desc"),
-        limit(ADMIN_PAGE_SIZE)
-      )
-    );
+    const data = await callFunction("adminGetConversation", {
+      conversationId
+    });
 
     if (getAdminResults() !== results) return;
 
@@ -2447,34 +2524,37 @@ async function adminViewConversation(conversationId) {
     back.className = "secondary-btn";
     back.textContent = "Back to Conversations";
     back.onclick = adminViewConversations;
+
     results.append(back);
 
     const heading = document.createElement("h3");
     heading.textContent = "Conversation: " + conversationId;
+
     results.append(heading);
+
+    const messages = data.messages || [];
 
     const note = document.createElement("p");
     note.className = "notice";
     note.textContent =
-      `Latest ${ADMIN_PAGE_SIZE} messages maximum, newest first.`;
+      "Showing up to 500 messages.";
+
     results.append(note);
 
-    if (snapshot.empty) {
+    if (!messages.length) {
       const empty = document.createElement("p");
       empty.textContent = "No messages found.";
       results.append(empty);
       return;
     }
 
-    snapshot.docs.forEach(messageSnapshot => {
-      const message = messageSnapshot.data();
-
+    messages.slice().reverse().forEach(message => {
       const row = makeAdminRow(
         message.unsent
           ? "Unsent message"
           : message.text || "Empty message",
         [
-          "Message ID: " + messageSnapshot.id,
+          "Message ID: " + message.id,
           "Sender: " + (message.senderId || "Unknown")
         ]
       );
@@ -2486,8 +2566,7 @@ async function adminViewConversation(conversationId) {
       remove.onclick = async () => {
         if (!confirm(
           "Permanently delete this message for everyone?\n\n" +
-          "Conversation: " + conversationId + "\n" +
-          "Message: " + messageSnapshot.id + "\n\n" +
+          "Message ID: " + message.id + "\n\n" +
           "This cannot be undone."
         )) {
           return;
@@ -2498,20 +2577,19 @@ async function adminViewConversation(conversationId) {
         try {
           await verifyDeveloperSession();
 
-          await deleteDoc(
-            doc(
-              db,
-              "conversations",
-              conversationId,
-              "messages",
-              messageSnapshot.id
-            )
-          );
+          await callFunction("adminDeleteMessage", {
+            conversationId,
+            messageId: message.id
+          });
 
           await adminViewConversation(conversationId);
+
         } catch (error) {
-          console.error("Admin message deletion failed:", error);
-          showError(friendlyError(error));
+          showError(
+            "Could not delete message: " +
+            friendlyError(error)
+          );
+
           remove.disabled = false;
         }
       };
@@ -2519,6 +2597,7 @@ async function adminViewConversation(conversationId) {
       row.append(remove);
       results.append(row);
     });
+
   } catch (error) {
     if (getAdminResults() === results) {
       showAdminFailure(error);
@@ -2526,10 +2605,155 @@ async function adminViewConversation(conversationId) {
   }
 }
 
+async function adminDeleteConversationById() {
+  const input = $("adminConversationId");
+  const button = $("adminDeleteConversation");
+
+  const conversationId = input?.value.trim();
+
+  if (!conversationId) {
+    showError("Please enter a Conversation ID.");
+    return;
+  }
+
+  if (!confirm(
+    "Are you sure you want to permanently delete this conversation?\n\n" +
+    "Conversation ID: " + conversationId + "\n\n" +
+    "All messages will also be deleted. This cannot be undone."
+  )) {
+    return;
+  }
+
+  button.disabled = true;
+
+  try {
+    await verifyDeveloperSession();
+
+    await callFunction("adminDeleteConversation", {
+      conversationId
+    });
+
+    if (currentConversation?.id === conversationId) {
+      adminCloseCurrentConversation();
+    }
+
+    input.value = "";
+
+    alert("Conversation successfully deleted.");
+
+    await adminViewConversations();
+
+  } catch (error) {
+    showError(
+      "Could not delete conversation: " +
+      friendlyError(error)
+    );
+  } finally {
+    button.disabled = false;
+  }
+}
+
+
+async function adminResetAllCommunicationData() {
+  if (!confirm(
+    "WARNING: THIS WILL DELETE ALL COMMUNICATION DATA.\n\n" +
+    "This includes:\n" +
+    "- All conversations\n" +
+    "- All messages\n" +
+    "- All message requests\n" +
+    "- All user blocks\n" +
+    "- All hidden messages\n" +
+    "- All conversation preferences\n\n" +
+    "User accounts and profile documents will remain.\n\n" +
+    "This action CANNOT be undone."
+  )) {
+    return;
+  }
+
+  const confirmation = prompt(
+    'To confirm, type exactly: RESET ALL DATA'
+  );
+
+  if (confirmation !== "RESET ALL DATA") {
+    alert("Reset cancelled. The confirmation did not match.");
+    return;
+  }
+
+  const button = $("adminResetData");
+  const results = getAdminResults();
+
+  button.disabled = true;
+
+  if (results) {
+    results.textContent = "Resetting communication data...";
+  }
+
+  try {
+    await verifyDeveloperSession();
+
+    const data = await callFunction("adminResetAllData", {
+      confirmation: "RESET ALL DATA"
+    });
+
+    adminCloseCurrentConversation();
+
+    conversationsCache = [];
+    incomingRequests = [];
+    outgoingRequests = [];
+
+    renderConversations();
+
+    if (results && getAdminResults() === results) {
+      results.textContent =
+        data.message ||
+        "Communication data was successfully reset.";
+    }
+
+    alert("All communication data has been cleared.");
+
+  } catch (error) {
+    console.error("Communication reset failed:", error);
+
+    showError(
+      "Could not reset communication data: " +
+      friendlyError(error)
+    );
+
+    if (results && getAdminResults() === results) {
+      results.textContent =
+        "Reset failed: " + friendlyError(error);
+    }
+
+  } finally {
+    button.disabled = false;
+  }
+}
+
+
+function adminCloseCurrentConversation() {
+  currentConversation = null;
+  currentMembers = [];
+  currentMessages = [];
+
+  if (messageUnsubscribe) {
+    messageUnsubscribe();
+    messageUnsubscribe = null;
+  }
+
+  if (hiddenUnsubscribe) {
+    hiddenUnsubscribe();
+    hiddenUnsubscribe = null;
+  }
+
+  $("chatScreen").classList.add("hidden");
+  $("welcomeScreen").classList.remove("hidden");
+  $("app").classList.remove("show-chat");
+}
+
 async function adminVoidAllMessageRequests() {
   if (!confirm(
-    "Delete ALL current message requests for everyone?\n\n" +
-    "This includes pending, accepted, and rejected request records. " +
+    "Delete ALL message requests for everyone?\n\n" +
+    "This includes pending, accepted, and rejected requests.\n\n" +
     "Existing conversations and messages will remain.\n\n" +
     "This cannot be undone."
   )) {
@@ -2539,54 +2763,32 @@ async function adminVoidAllMessageRequests() {
   const button = $("adminVoidRequests");
   const results = getAdminResults();
 
-  if (button) button.disabled = true;
-
-  let deletedCount = 0;
+  button.disabled = true;
 
   try {
     await verifyDeveloperSession();
 
-    // Capture a bounded set first, rather than looping forever
-    // if users keep creating new requests.
-    const snapshot = await getDocs(
-      query(
-        collection(db, "messageRequests"),
-        limit(400)
-      )
+    const data = await callFunction(
+      "adminVoidAllMessageRequests"
     );
-
-    if (snapshot.empty) {
-      if (results && getAdminResults() === results) {
-        results.textContent = "No message requests found.";
-      }
-      return;
-    }
-
-    const batch = writeBatch(db);
-
-    snapshot.docs.forEach(requestDoc => {
-      batch.delete(requestDoc.ref);
-    });
-
-    await batch.commit();
-    deletedCount = snapshot.size;
 
     if (results && getAdminResults() === results) {
       results.textContent =
-        `Deleted ${deletedCount} message request records. ` +
-        (deletedCount === 400
-          ? "This tool deletes at most 400 per operation. " +
-            "Run it again if more requests remain."
-          : "Existing conversations and messages were not deleted.");
+        "Successfully deleted " +
+        (data.deletedCount || 0) +
+        " message request records.";
     }
+
   } catch (error) {
     console.error("Admin request deletion failed:", error);
 
     showError(
-      "Could not clear message requests: " + friendlyError(error)
+      "Could not clear message requests: " +
+      friendlyError(error)
     );
+
   } finally {
-    if (button) button.disabled = false;
+    button.disabled = false;
   }
 }
   
